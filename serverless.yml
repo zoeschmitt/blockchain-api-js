@@ -1,17 +1,83 @@
-service: 10xit-api
+service: tenx-api
 # app and org for use with dashboard.serverless.com
 #app: your-app-name
 #org: your-org-name
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: '2'
+frameworkVersion: "2"
 
 provider:
   name: aws
   runtime: nodejs12.x
   lambdaHashingVersion: 20201221
+  region: us-east-1
+  environment:
+    walletTableName: ${self:custom.walletTableName}
+    nftTableName: ${self:custom.nftTableName}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource: "*"
+
+plugins:
+  - serverless-webpack
+
+package:
+  individually: true
+
+custom:
+  walletTableName: wallets
+  nftTableName: nfts
 
 functions:
-  hello:
-    handler: handler.hello
+  createWallet:
+    handler: lambdas/endpoints/createWallet.handler
+    events:
+      - http:
+          path: create-wallet/{userId}
+          method: POST
+          cors: true
+  createNFT:
+    handler: lambdas/endpoints/createNFT.handler
+    events:
+      - http:
+          path: create-nft/{userId}
+          method: POST
+          cors: true
+  getAllNFTs:
+    handler: lambdas/endpoints/getAllNFTs.handler
+    events:
+      - http:
+          path: get-all-nfts
+          method: GET
+          cors: true
+  getNFT:
+    handler: lambdas/endpoints/getNFT.handler
+    events:
+      - http:
+          path: get-nft/{id}
+          method: GET
+          cors: true
+  getUserNFTs:
+    handler: lambdas/endpoints/getUserNFTs.handler
+    events:
+      - http:
+          path: get-user-nfts/{userId}
+          method: GET
+          cors: true
+
+resources:
+  Resources:
+    DynamoDbTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName}
+        AttributeDefinitions:
+          - AttributeName: ID
+            AttributeType: S
+        KeySchema:
+          - AttributeName: ID
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
