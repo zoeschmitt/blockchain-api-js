@@ -36,14 +36,14 @@ functions:
     handler: lambdas/endpoints/createWallet.handler
     events:
       - http:
-          path: create-wallet/{userId}
+          path: create-wallet
           method: POST
           cors: true
   createNFT:
     handler: lambdas/endpoints/createNFT.handler
     events:
       - http:
-          path: create-nft/{userId}
+          path: create-nft/{walletId}
           method: POST
           cors: true
   getAllNFTs:
@@ -64,7 +64,7 @@ functions:
     handler: lambdas/endpoints/getUserNFTs.handler
     events:
       - http:
-          path: get-user-nfts/{userId}
+          path: get-user-nfts/{walletId}
           method: GET
           cors: true
 
