@@ -1,0 +1,12 @@
+{
+    "Table": {
+      "TableName": "nftsTable",
+      "KeySchema": [{ "AttributeName": "id", "KeyType": "HASH" }],
+      "AttributeDefinitions": [{ "AttributeName": "id", "AttributeType": "S" }],
+      "provisionedThroughput": {
+        "ReadCapacityUnits": 1,
+        "WriteCapacityUnits": 1
+      }
+    }
+  }
+  
