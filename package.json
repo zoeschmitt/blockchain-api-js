@@ -7,7 +7,7 @@
   "description": "10xit api",
   "main": "webpack.config.js",
   "scripts": {
-    "test": "test"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -20,6 +20,7 @@
   "homepage": "https://github.com/10xit-inc/api#readme",
   "devDependencies": {
     "aws-sdk": "^2.1046.0",
+    "jest": "^27.4.5",
     "serverless": "^2.68.0",
     "serverless-dynamodb-local": "^0.2.40",
     "serverless-offline": "^8.3.1",

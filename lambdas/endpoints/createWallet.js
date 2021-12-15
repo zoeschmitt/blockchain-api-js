@@ -1,4 +1,4 @@
-const Responses = require("../common/API_Responses");
+const Responses = require("../common/apiResponses");
 const Dynamo = require("../common/Dynamo");
 
 const walletTableName = process.env.walletTableName;
