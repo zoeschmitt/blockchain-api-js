@@ -1,12 +1,21 @@
-const AWS = require("aws-sdk");
+import { DynamoDB } from "aws-sdk";
 
 let options = {};
+
 if (process.env.IS_OFFLINE)
   options = {
     region: "localhost",
     endpoint: "http://localhost:8000",
   };
-const documentClient = new AWS.DynamoDB.DocumentClient(options);
+
+if (process.env.JEST_WORKER_ID)
+  options = {
+    endpoint: "http://localhost:8000",
+    region: "local-env",
+    sslEnabled: false,
+  };
+
+const documentClient = new DynamoDB.DocumentClient(options);
 
 const Dynamo = {
   async get(id, TableName) {
@@ -51,4 +60,4 @@ const Dynamo = {
   },
 };
 
-module.exports = Dynamo;
+export default Dynamo;

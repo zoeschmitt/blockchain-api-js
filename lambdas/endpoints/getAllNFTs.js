@@ -1,19 +1,19 @@
-const Responses = require("../common/apiResponses");
-const Dynamo = require('../common/Dynamo');
+import { _404, _200 } from "../common/apiResponses";
+import { get } from "../common/dynamo";
 
 const nftTableName = process.env.nftTableName;
 
-exports.handler = async event => {
-    console.log('event', event);
+export async function handler(event) {
+    // console.log('event', event);
 
-    const nfts = await Dynamo.get(nftTableName).catch(err => {
+    const nfts = await get(nftTableName).catch(err => {
         console.log('error in Dynamo Get', err);
         return null;
     });
 
     if (!nfts) {
-        return Responses._404({ message: 'Failed to nfts' });
+        return _404({ message: 'Failed to nfts' });
     }
 
-    return Responses._200({ nfts });
-};
+    return _200({ nfts });
+}

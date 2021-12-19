@@ -1,11 +1,13 @@
 {
   "dependencies": {
-    "serverless-jest-plugin": "^0.4.0"
+    "dotenv": "^10.0.0",
+    "serverless-jest-plugin": "^0.4.0",
+    "uuid": "^8.3.2",
+    "web3": "^1.6.1"
   },
   "name": "10xit-api",
   "version": "1.0.0",
   "description": "10xit api",
-  "main": "webpack.config.js",
   "scripts": {
     "test": "jest"
   },
@@ -19,12 +21,17 @@
   },
   "homepage": "https://github.com/10xit-inc/api#readme",
   "devDependencies": {
+    "@babel/preset-env": "^7.16.5",
+    "@shelf/jest-dynamodb": "^2.1.0",
     "aws-sdk": "^2.1046.0",
+    "babel-jest": "^27.4.5",
     "jest": "^27.4.5",
     "serverless": "^2.68.0",
     "serverless-dynamodb-local": "^0.2.40",
     "serverless-offline": "^8.3.1",
+    "serverless-plugin-scripts": "^1.0.2",
     "serverless-webpack": "^5.6.0",
-    "webpack": "^5.65.0"
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1"
   }
 }
