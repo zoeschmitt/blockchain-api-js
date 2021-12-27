@@ -1,19 +1,31 @@
-import { _404, _200 } from "../common/apiResponses";
-import { get } from "../common/dynamo";
-
-const nftTableName = process.env.nftTableName;
+import Responses from "../common/apiResponses";
+import Dynamo from "../common/dynamo";
 
 export async function handler(event) {
-    // console.log('event', event);
+  const tableName = process.env.TABLE_NAME;
+  const orgId = await getOrgId(event["headers"]["X-API-KEY"]);
 
-    const nfts = await get(nftTableName).catch(err => {
-        console.log('error in Dynamo Get', err);
-        return null;
-    });
+  const nfts = await Dynamo.get({
+    TableName: tableName,
+    KeyConditionExpression: "#PK = :PK and begins_with(#SK, :SK)",
+    ExpressionAttributeNames: { "#PK": "PK", "#SK": "SK" },
+    ExpressionAttributeValues: {
+      ":PK": `ORG#${orgId}`,
+      ":SK": "WAL#",
+    },
+  });
 
-    if (!nfts) {
-        return _404({ message: 'Failed to nfts' });
-    }
+  if (!nfts) {
+    return Responses._404({ message: "Failed to find nfts" });
+  }
 
-    return _200({ nfts });
+  let nftData = [];
+  for (let nft in nfts) {
+      nftData.push({
+          id: nft['id'],
+          data: nft['data']
+      })
+  }
+
+  return Responses._200({ NFTs: nftData });
 }

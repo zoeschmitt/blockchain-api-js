@@ -1,4 +1,4 @@
-service: api
+service: api-v0
 frameworkVersion: "2"
 
 provider:
@@ -8,8 +8,7 @@ provider:
   lambdaHashingVersion: 20201221
   region: us-east-1
   environment:
-    WALLET_TABLE_NAME: ${self:custom.walletTableName}
-    NFT_TABLE_NAME: ${self:custom.nftTableName}
+    TABLE_NAME: ${self:custom.environment.TABLE_NAME}
     WALLETS_PUB_KEY: ${self:custom.environment.WALLETS_PUB_KEY.${self:custom.stage}}
     WALLETS_PRIV_KEY: ${self:custom.environment.WALLETS_PRIV_KEY.${self:custom.stage}}
     OUR_WALLET: ${self:custom.environment.OUR_WALLET.${self:custom.stage}}
@@ -24,16 +23,14 @@ plugins:
   - serverless-webpack
   - serverless-offline
   - serverless-dynamodb-local
-  - serverless-plugin-scripts
 
 package:
   individually: true
 
 custom:
   stage: ${opt:stage, self:provider.stage}
-  walletTableName: wallets
-  nftTableName: nfts
   environment:
+    TABLE_NAME: 10xit-prod
     WALLETS_PUB_KEY:
       dev: dev/wallets/pubkey
       prod: prod/wallets/pubkey
@@ -49,15 +46,13 @@ custom:
   dynamodb:
     stages:
       - dev
+      - prod
     start:
       port: 8000
       inMemory: true
       migrate: true
     migration:
       dir: offline/migrations
-  scripts:
-    hooks: # lifecycle events on offline deploy
-      "aws:common:valdiate:validate": walletTableName=wallets nftTableName=nfts jest
   webpack:
     webpackConfig: "webpack.config.js"
     includeModules: false # Node modules configuration for packaging
@@ -100,28 +95,25 @@ functions:
           path: get-user-nfts/{walletId}
           method: GET
           cors: true
+  createOrg:
+    handler: lambdas/endpoints/createOrg.handler
+    events:
+      - http:
+          path: create-org
+          method: POST
+          cors: true
+          # private: true
 
-resources:
-  Resources:
-    walletsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.walletTableName}
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
-        BillingMode: PAY_PER_REQUEST
-    nftsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.nftTableName}
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
-        BillingMode: PAY_PER_REQUEST
+# resources:
+#   Resources:
+#     10xitprod:
+#       Type: AWS::DynamoDB::Table
+#       Properties:
+#         TableName: ${self:custom.TABLE_NAME}
+#         AttributeDefinitions:
+#           - AttributeName: PK
+#             AttributeType: S
+#         KeySchema:
+#           - AttributeName: SK
+#             KeyType: S
+#         BillingMode: PAY_PER_REQUEST

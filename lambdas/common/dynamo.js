@@ -1,4 +1,4 @@
-import { DynamoDB } from "aws-sdk";
+const AWS = require("aws-sdk");
 
 let options = {};
 
@@ -15,22 +15,15 @@ if (process.env.JEST_WORKER_ID)
     sslEnabled: false,
   };
 
-const documentClient = new DynamoDB.DocumentClient(options);
+const documentClient = new AWS.DynamoDB.DocumentClient(options);
 
 const Dynamo = {
-  async get(id, TableName) {
-    const params = {
-      TableName,
-      Key: {
-        id,
-      },
-    };
-
+  async get(params) {
     const data = await documentClient.get(params).promise();
 
     if (!data || !data.Item) {
       throw Error(
-        `There was an error fetching the data for id of ${id} from ${TableName}`
+        `There was an error fetching the data for PK of ${params.Key.PK} from ${params.TableName}`
       );
     }
     console.log(data);
@@ -38,9 +31,9 @@ const Dynamo = {
     return data.Item;
   },
 
-  async write(data, TableName) {
-    if (!data.id) {
-      throw Error("no id on the data");
+  async put(data, TableName) {
+    if (!data.PK) {
+      throw Error("no PK on the data");
     }
 
     const params = {
@@ -52,12 +45,41 @@ const Dynamo = {
 
     if (!res) {
       throw Error(
-        `There was an error inserting id of ${data.id} in table ${TableName}`
+        `There was an error inserting id of ${data.PK} in table ${TableName}`
       );
     }
 
     return data;
   },
+
+  // async update(data, TableName) {
+  //   if (!data.PK) {
+  //     throw Error("no PK on the data");
+  //   }
+  //   //adding orgid to attributes
+
+  //   const orgId = "thisisanexampleupdate";
+
+  //   const params = {
+  //     TableName,
+  //     Key: { PK: `ORG#${orgId}`, SK: `METADATA#${orgId}` },
+  //     UpdateExpression: "set #orgId = :orgId",
+  //     ExpressionAttributeNames: { "#orgId": "orgId" },
+  //     ExpressionAttributeValues: {
+  //       ":orgId": orgId,
+  //     },
+  //   };
+
+  //   const res = await documentClient.put(params).promise();
+
+  //   if (!res) {
+  //     throw Error(
+  //       `There was an error inserting id of ${data.PK} in table ${TableName}`
+  //     );
+  //   }
+
+  //   return data;
+  // },
 };
 
-export default Dynamo;
+module.exports = Dynamo;

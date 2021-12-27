@@ -1,5 +1,5 @@
-import { SecretsManager } from "aws-sdk";
-const sm = new SecretsManager({ region: "us-east-1" });
+const AWS = require('aws-sdk');
+const sm = new AWS.SecretsManager({ region: "us-east-1" });
 
 const getSecrets = async (SecretId) => {
   return await new Promise((resolve, reject) => {
@@ -10,7 +10,7 @@ const getSecrets = async (SecretId) => {
   });
 };
 
-export default getSecrets;
+module.exports = getSecrets;
 
 // const getErrorMsg = err => {
 //     var errMsg = err.code.toString() ?? '';

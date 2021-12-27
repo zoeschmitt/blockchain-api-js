@@ -1,4 +1,4 @@
-import Responses, { _200, _400, _404, _DefineResponse } from "../common/apiResponses";
+const Responses = require('../common/apiResponses');
 
 test("Responses is an object", () => {
   expect(typeof Responses).toBe("object");

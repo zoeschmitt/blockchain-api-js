@@ -1,16 +1,10 @@
 module.exports = {
   tables: [
     {
-      TableName: "wallets",
-      KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
-      AttributeDefinitions: [{ AttributeName: "id", AttributeType: "S" }],
+      TableName: "ten-prod",
+      KeySchema: [{ AttributeName: "orgId", KeyType: "HASH" }],
+      AttributeDefinitions: [{ AttributeName: "orgId", AttributeType: "S" }],
       BillingMode: "PAY_PER_REQUEST",
-    },
-    {
-      TableName: "nfts",
-      KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
-      AttributeDefinitions: [{ AttributeName: "id", AttributeType: "S" }],
-      BillingMode: "PAY_PER_REQUEST",
-    },
+    }
   ],
 };
