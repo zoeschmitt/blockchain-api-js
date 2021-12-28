@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "axios": "^0.24.0",
     "dotenv": "^10.0.0",
+    "form-data": "^4.0.0",
     "serverless-jest-plugin": "^0.4.0",
     "uuid": "^8.3.2",
     "web3": "^1.6.1"

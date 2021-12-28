@@ -1,0 +1,17 @@
+{
+  "Table": {
+    "TableName": "10xit-prod",
+    "KeySchema": [
+      { "AttributeName": "PK", "KeyType": "HASH" },
+      { "AttributeName": "SK", "KeyType": "HASH" }
+    ],
+    "AttributeDefinitions": [
+      { "AttributeName": "PK", "AttributeType": "S" },
+      { "AttributeName": "SK", "AttributeType": "S" }
+    ],
+    "provisionedThroughput": {
+      "ReadCapacityUnits": 1,
+      "WriteCapacityUnits": 1
+    }
+  }
+}

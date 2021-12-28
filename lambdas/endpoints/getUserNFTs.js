@@ -9,19 +9,28 @@ export async function handler(event) {
     return _400({ message: "Missing a walletId in the path" });
 
   const walletId = event.pathParameters.walletId;
+  const orgId = await getOrgId(event["headers"]["X-API-KEY"]);
 
   const nfts = await Dynamo.get({
     TableName: tableName,
-    KeyConditionExpression: "#PK = :PK and begins_with(#SK, :SK)",
+    KeyConditionExpression: "#PK = :PK and #SK = :SK",
     ExpressionAttributeNames: { "#PK": "PK", "#SK": "SK" },
     ExpressionAttributeValues: {
       ":PK": `ORG#${orgId}`,
-      ":SK": "WAL#${walletId}",
+      ":SK": `WAL#${walletId}`,
     },
   });
 
   if (!nfts) {
-    return _404({ message: "Failed to get nfts for wallet " });
+    return Responses._404({ message: "Failed to find nfts" });
+  }
+
+  let nftData = [];
+  for (let nft in nfts) {
+    nftData.push({
+      id: nft["id"],
+      data: nft["data"],
+    });
   }
 
   return _200({ user });

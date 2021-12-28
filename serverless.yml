@@ -13,6 +13,7 @@ provider:
     WALLETS_PRIV_KEY: ${self:custom.environment.WALLETS_PRIV_KEY.${self:custom.stage}}
     OUR_WALLET: ${self:custom.environment.OUR_WALLET.${self:custom.stage}}
     ALCHEMY_KEY: ${self:custom.environment.ALCHEMY_KEY.${self:custom.stage}}
+    PINATA_KEY: ${self:custom.environment.PINATA_KEY.${self:custom.stage}}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -43,6 +44,9 @@ custom:
     ALCHEMY_KEY:
       dev: dev/alchemy
       prod: prod/alchemy
+    PINATA_KEY:
+      dev: dev/pinata
+      prod: prod/pinata
   dynamodb:
     stages:
       - dev
