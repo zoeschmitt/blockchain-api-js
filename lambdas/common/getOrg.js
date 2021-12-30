@@ -1,7 +1,7 @@
 const AWS = require("aws-sdk");
-const Dynamo = require("../common/dynamo");
+const Dynamo = require("./dynamo");
 
-const getOrgId = async (apiKey) => {
+const getOrg = async (apiKey) => {
   try {
     const tableName = process.env.TABLE_NAME;
     const params = {
@@ -12,11 +12,11 @@ const getOrgId = async (apiKey) => {
       },
     };
     const res = await Dynamo.get(params);
-    return res["orgId"];
+    return res;
   } catch (e) {
-    console.log(`Error getOrgId: ${e}`);
+    console.log(`Error getOrg: ${e}`);
     return null;
   }
 };
 
-module.exports = getOrgId;
+module.exports = getOrg;

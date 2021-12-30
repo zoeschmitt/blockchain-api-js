@@ -43,7 +43,7 @@ custom:
       prod: prod/ourwallet
     ALCHEMY_KEY:
       dev: dev/alchemy
-      prod: prod/alchemy
+      prod: dev/alchemy
     PINATA_KEY:
       dev: dev/pinata
       prod: prod/pinata

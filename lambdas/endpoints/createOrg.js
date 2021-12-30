@@ -10,18 +10,20 @@ export async function handler(event) {
   const orgId = uuidv4();
   try {
     const tableName = process.env.TABLE_NAME;
-    const reqOrgInfo = JSON.parse(event.body);
+    const request = JSON.parse(event.body);
     if (
-      !reqOrgInfo ||
-      !reqOrgInfo["name"] ||
-      !reqOrgInfo["apiKey"] ||
-      !reqOrgInfo["tier"]
+      !request ||
+      !request["name"] ||
+      !request["apiKey"] ||
+      !request["contract"] ||
+      !request["tier"]
     ) {
       return Responses._400({
         message:
           "Missing the organization name or apiKey or tier from the request body",
       });
     }
+    //const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
     const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
     const encodedCryptoPubKey = await getSecrets(process.env.WALLETS_PUB_KEY);
     const cryptoPubKey = Buffer.from(
@@ -41,11 +43,18 @@ export async function handler(event) {
       privateKey: encryptedWalletPrivKey.toString("base64"),
     };
 
-    const orgKeyData = {
-      PK: `KEY#${reqOrgInfo["apiKey"]}`,
-      SK: `KEY#${reqOrgInfo["apiKey"]}`,
+    const orgData = {
       orgId: orgId,
-      tier: reqOrgInfo["tier"],
+      name: request["name"],
+      contract: request["contract"],
+      tier: request["tier"],
+      wallet: walletData,
+    };
+
+    const orgKeyData = {
+      PK: `KEY#${request["apiKey"]}`,
+      SK: `KEY#${request["apiKey"]}`,
+      orgData,
     };
 
     await Dynamo.put(orgKeyData, tableName).catch((err) => {
@@ -53,16 +62,13 @@ export async function handler(event) {
       return null;
     });
 
-    const orgData = {
+    const org = {
       PK: `ORG#${orgId}`,
       SK: `METADATA#${orgId}`,
-      orgId: orgId,
-      name: reqOrgInfo["name"],
-      tier: reqOrgInfo["tier"],
-      wallet: walletData,
+      orgData,
     };
 
-    const res = await Dynamo.put(orgData, tableName).catch((err) => {
+    const res = await Dynamo.put(org, tableName).catch((err) => {
       console.log("error in dynamo write", err);
       return null;
     });

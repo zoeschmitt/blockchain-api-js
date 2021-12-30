@@ -1,4 +1,4 @@
-import getOrgId from "../common/getOrgId";
+import getOrgId from "../common/getOrg";
 import { Buffer } from "buffer";
 import Responses from "../common/apiResponses";
 import Dynamo from "../common/dynamo";
