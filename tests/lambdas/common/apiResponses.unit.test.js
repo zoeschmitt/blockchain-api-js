@@ -1,4 +1,4 @@
-const Responses = require('../common/apiResponses');
+const Responses = require('../../../lambdas/common/apiResponses');
 
 test("Responses is an object", () => {
   expect(typeof Responses).toBe("object");

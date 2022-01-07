@@ -16,7 +16,7 @@ export async function handler(event) {
   try {
     // Verifying request data
     const request = JSON.parse(event.body);
-
+    console.log(event)
     if (
       !request ||
       !request["metadata"] ||
@@ -24,7 +24,7 @@ export async function handler(event) {
       !request["filename"]
     ) {
       return Responses._400({
-        message: "Missing nft metadata or file from the request body",
+        message: "Missing nft metadata, filename, or content from the request body",
       });
     }
 
@@ -36,7 +36,7 @@ export async function handler(event) {
     const metadata = request["metadata"];
     const filename = request["filename"];
 
-    const org = await getOrg(event["headers"]["X-API-KEY"]);
+    const org = await getOrg(event["headers"]["x-api-key"]);
     const orgId = org["orgId"];
 
     // // Fetching wallet details with walletId from req
