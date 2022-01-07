@@ -43,9 +43,9 @@ custom:
       prod: prod/ourwallet
     ALCHEMY_KEY:
       dev: dev/alchemy
-      prod: dev/alchemy
+      prod: prod/alchemy
     PINATA_KEY:
-      dev: dev/pinata
+      dev: prod/pinata
       prod: prod/pinata
   dynamodb:
     stages:
