@@ -16,7 +16,7 @@ export async function handler(event) {
   try {
     // Verifying request data
     const request = JSON.parse(event.body);
-    console.log(event)
+    console.log(event);
     if (
       !request ||
       !request["metadata"] ||
@@ -24,7 +24,8 @@ export async function handler(event) {
       !request["filename"]
     ) {
       return Responses._400({
-        message: "Missing nft metadata, filename, or content from the request body",
+        message:
+          "Missing nft metadata, filename, or content from the request body",
       });
     }
 
@@ -32,11 +33,17 @@ export async function handler(event) {
       return Responses._400({ message: "Missing a walletId in the path" });
 
     const walletId = event.pathParameters.walletId;
-    const content = request["content"];
+    const content = request["content"].includes(",")
+      ? request["content"].split(",")[1]
+      : request["content"];
     const metadata = request["metadata"];
     const filename = request["filename"];
 
-    const org = await getOrg(event["headers"]["x-api-key"]);
+    const org = await getOrg(
+      event["headers"]["x-api-key"] !== undefined
+        ? event["headers"]["x-api-key"]
+        : event["headers"]["X-API-KEY"]
+    );
     const orgId = org["orgId"];
 
     // // Fetching wallet details with walletId from req
