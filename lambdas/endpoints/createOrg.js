@@ -23,7 +23,6 @@ export async function handler(event) {
           "Missing the organization name or apiKey or tier from the request body",
       });
     }
-    //const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
     const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
     const encodedCryptoPubKey = await getSecrets(process.env.WALLETS_PUB_KEY);
     const cryptoPubKey = Buffer.from(

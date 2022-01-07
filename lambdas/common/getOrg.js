@@ -12,7 +12,7 @@ const getOrg = async (apiKey) => {
       },
     };
     const res = await Dynamo.get(params);
-    return res;
+    return res['orgData'];
   } catch (e) {
     console.log(`Error getOrg: ${e}`);
     return null;

@@ -1,4 +1,4 @@
-import getOrgId from "../common/getOrg";
+import getOrg from "../common/getOrg";
 import { Buffer } from "buffer";
 import Responses from "../common/apiResponses";
 import Dynamo from "../common/dynamo";
@@ -11,7 +11,8 @@ export async function handler(event) {
     const tableName = process.env.TABLE_NAME;
     const walletId = uuidv4();
   try {
-    const orgId = await getOrgId(event['headers']['X-API-KEY']);
+    const org = await getOrg(event['headers']['X-API-KEY']);
+    const orgId = org["orgId"];
     const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
     const encodedCryptoPubKey = await getSecrets(process.env.WALLETS_PUB_KEY);
     const cryptoPubKey = Buffer.from(

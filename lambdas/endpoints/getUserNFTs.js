@@ -1,37 +1,47 @@
 import Responses from "../common/apiResponses";
 import Dynamo from "../common/dynamo";
+import getOrg from "../common/getOrg";
 
 export async function handler(event) {
-  // console.log('event', event);
   const tableName = process.env.TABLE_NAME;
 
-  if (!event.pathParameters || !event.pathParameters.walletId)
-    return _400({ message: "Missing a walletId in the path" });
+  try {
+    if (!event.pathParameters || !event.pathParameters.walletId)
+      return Responses._400({ message: "Missing a walletId in the path" });
 
-  const walletId = event.pathParameters.walletId;
-  const orgId = await getOrgId(event["headers"]["X-API-KEY"]);
+    const walletId = event.pathParameters.walletId;
+    const org = await getOrg(event["headers"]["X-API-KEY"]);
+    const orgId = org["orgId"];
 
-  const nfts = await Dynamo.get({
-    TableName: tableName,
-    KeyConditionExpression: "#PK = :PK and #SK = :SK",
-    ExpressionAttributeNames: { "#PK": "PK", "#SK": "SK" },
-    ExpressionAttributeValues: {
-      ":PK": `ORG#${orgId}`,
-      ":SK": `WAL#${walletId}`,
-    },
-  });
-
-  if (!nfts) {
-    return Responses._404({ message: "Failed to find nfts" });
-  }
-
-  let nftData = [];
-  for (let nft in nfts) {
-    nftData.push({
-      id: nft["id"],
-      data: nft["data"],
+    const nftQuery = await Dynamo.query({
+      TableName: tableName,
+      KeyConditionExpression: "#PK = :PK and begins_with(#SK, :SK)",
+      ExpressionAttributeNames: { "#PK": "PK", "#SK": "SK" },
+      ExpressionAttributeValues: {
+        ":PK": `ORG#${orgId}`,
+        ":SK": `WAL#${walletId}`,
+      },
     });
-  }
 
-  return _200({ user });
+    if (!nftQuery) {
+      return Responses._404({ message: "Failed to find nfts" });
+    }
+
+    let nfts = [];
+    for (let nft in nftQuery) {
+      const nftData = nftQuery[nft]["nftData"];
+      nfts.push({
+        nftId: nftData["nftId"],
+        mintedBy: nftData["mintedBy"],
+        walletAddress: nftData["walletAddress"],
+        openseaUrl: nftData["openseaUrl"],
+        metadata: nftData["metadata"],
+      });
+    }
+
+    return Responses._200({ NFTs: nfts });
+  } catch (e) {
+    console.log(`getUserNFTs error: ${e.toString()}`);
+    return Responses._400({ message: "Failed to get nfts" });
+  }
 }

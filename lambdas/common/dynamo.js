@@ -52,34 +52,18 @@ const Dynamo = {
     return data;
   },
 
-  // async update(data, TableName) {
-  //   if (!data.PK) {
-  //     throw Error("no PK on the data");
-  //   }
-  //   //adding orgid to attributes
+  async query(params) {
+    const data = await documentClient.query(params).promise();
 
-  //   const orgId = "thisisanexampleupdate";
-
-  //   const params = {
-  //     TableName,
-  //     Key: { PK: `ORG#${orgId}`, SK: `METADATA#${orgId}` },
-  //     UpdateExpression: "set #orgId = :orgId",
-  //     ExpressionAttributeNames: { "#orgId": "orgId" },
-  //     ExpressionAttributeValues: {
-  //       ":orgId": orgId,
-  //     },
-  //   };
-
-  //   const res = await documentClient.put(params).promise();
-
-  //   if (!res) {
-  //     throw Error(
-  //       `There was an error inserting id of ${data.PK} in table ${TableName}`
-  //     );
-  //   }
-
-  //   return data;
-  // },
+    if (!data || !data.Items) {
+      throw Error(
+        `There was an error fetching the query data ${JSON.stringify(
+          params
+        )}`
+      );
+    }
+    return data.Items;
+  },
 };
 
 module.exports = Dynamo;
