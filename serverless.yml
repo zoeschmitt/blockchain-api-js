@@ -111,6 +111,13 @@ functions:
           method: POST
           cors: true
           # private: true
+  getWallet:
+    handler: lambdas/endpoints/getWallet.handler
+    events:
+      - http:
+          path: get-wallet
+          method: GET
+          cors: true
 
 # resources:
 #   Resources:
