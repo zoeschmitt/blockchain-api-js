@@ -11,7 +11,7 @@ export async function handler(event) {
 
     const id = event.pathParameters.id;
 
-    const org = await getOrg(event["headers"]["X-API-KEY"]);
+    const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
 
     const params = {

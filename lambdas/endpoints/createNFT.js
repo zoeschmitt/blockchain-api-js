@@ -39,11 +39,7 @@ export async function handler(event) {
     const metadata = request["metadata"];
     const filename = request["filename"];
 
-    const org = await getOrg(
-      event["headers"]["x-api-key"] !== undefined
-        ? event["headers"]["x-api-key"]
-        : event["headers"]["X-API-KEY"]
-    );
+    const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
 
     // // Fetching wallet details with walletId from req
@@ -96,7 +92,7 @@ export async function handler(event) {
     const ourPrivateKey = ourWallet["privkey"];
     const walletAddress = walletData["wallet"]["address"];
     const web3 = new Web3(alchemyKey["key"]);
-    const openseaBaseUrl = `https://opensea.io/assets`;
+    const openseaBaseUrl = process.env.OPENSEA_URL;
     const contractAddress = org["contract"];
 
     console.log(`ourAddress: ${ourAddress}`);
