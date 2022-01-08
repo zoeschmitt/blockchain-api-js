@@ -2,7 +2,6 @@ import getOrg from "../common/getOrg";
 import { Buffer } from "buffer";
 import Responses from "../common/apiResponses";
 import Dynamo from "../common/dynamo";
-import Web3 from "web3";
 import { v4 as uuidv4 } from "uuid";
 import getSecrets from "../common/getSecrets";
 import crypto from "crypto";
@@ -11,6 +10,7 @@ export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
   const walletId = uuidv4();
   try {
+    console.log(event);
     if (!event.pathParameters || !event.pathParameters.walletId)
       return Responses._400({ message: "Missing a walletId in the path" });
 
@@ -37,20 +37,23 @@ export async function handler(event) {
       encodedCryptoPrivKey["privkey"],
       "base64"
     ).toString("ascii");
+    console.log(cryptoPrivKey);
+    console.log(walletData["wallet"]["privateKey"]);
     const walletPrivateKey = Buffer.from(
-      walletData["privateKey"],
+      walletData["wallet"]["privateKey"],
       "base64"
-    ).toString("ascii");
+    );
+    console.log(walletPrivateKey);
 
     const decryptedWalletPrivKey = crypto.privateDecrypt(
       cryptoPrivKey,
-      walletPrivateKey
+      Buffer.from(walletData["wallet"]["privateKey"], "base64")
     );
 
     const data = {
       walletId: walletId,
-      decryptedPrivateKey: decryptedWalletPrivKey,
-      address: walletData["address"],
+      decryptedPrivateKey: decryptedWalletPrivKey.toString("ascii"),
+      address: walletData["wallet"]["address"],
     };
 
     return Responses._200({ wallet: data });
