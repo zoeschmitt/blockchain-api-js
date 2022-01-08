@@ -96,7 +96,7 @@ export async function handler(event) {
     const ourPrivateKey = ourWallet["privkey"];
     const walletAddress = walletData["wallet"]["address"];
     const web3 = new Web3(alchemyKey["key"]);
-    const openseaBaseUrl = `https://testnets.opensea.io/assets/mumbai`;
+    const openseaBaseUrl = `https://opensea.io/assets`;
     const contractAddress = org["contract"];
 
     console.log(`ourAddress: ${ourAddress}`);

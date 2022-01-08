@@ -2,6 +2,12 @@
 
 ## Deploying
 
+### Prod Branch
 ```bash
-sls deploy --stage dev
+sls deploy --stage prod
+```
+
+### Dev Branch
+```bash
+sls deploy
 ```
