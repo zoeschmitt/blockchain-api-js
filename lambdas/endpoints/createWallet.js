@@ -11,7 +11,7 @@ export async function handler(event) {
     const tableName = process.env.TABLE_NAME;
     const walletId = uuidv4();
   try {
-    const org = await getOrg(event['headers']['X-API-KEY']);
+    const org = await getOrg(event['headers']);
     const orgId = org["orgId"];
     const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
     const encodedCryptoPubKey = await getSecrets(process.env.WALLETS_PUB_KEY);
