@@ -50,7 +50,7 @@ custom:
       prod: prod/pinata
     OPENSEA_URL:
       dev: https://testnets.opensea.io/assets/mumbai
-      prod: https://opensea.io/assets
+      prod: https://opensea.io/assets/matic
   dynamodb:
     stages:
       - dev
@@ -115,7 +115,7 @@ functions:
     handler: lambdas/endpoints/getWallet.handler
     events:
       - http:
-          path: get-wallet
+          path: get-wallet/{walletId}
           method: GET
           cors: true
 
