@@ -10,7 +10,7 @@ export async function handler(event) {
       return Responses._400({ message: "Missing a walletId in the path" });
 
     const walletId = event.pathParameters.walletId;
-    const org = await getOrg(event["headers"]["X-API-KEY"]);
+    const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
 
     const nftQuery = await Dynamo.query({

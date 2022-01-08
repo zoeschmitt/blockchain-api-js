@@ -16,7 +16,7 @@ export async function handler(event) {
   try {
     // Verifying request data
     const request = JSON.parse(event.body);
-
+    console.log(event);
     if (
       !request ||
       !request["metadata"] ||
@@ -24,7 +24,8 @@ export async function handler(event) {
       !request["filename"]
     ) {
       return Responses._400({
-        message: "Missing nft metadata or file from the request body",
+        message:
+          "Missing nft metadata, filename, or content from the request body",
       });
     }
 
@@ -32,11 +33,13 @@ export async function handler(event) {
       return Responses._400({ message: "Missing a walletId in the path" });
 
     const walletId = event.pathParameters.walletId;
-    const content = request["content"];
+    const content = request["content"].includes(",")
+      ? request["content"].split(",")[1]
+      : request["content"];
     const metadata = request["metadata"];
     const filename = request["filename"];
 
-    const org = await getOrg(event["headers"]["X-API-KEY"]);
+    const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
 
     // // Fetching wallet details with walletId from req
@@ -89,7 +92,7 @@ export async function handler(event) {
     const ourPrivateKey = ourWallet["privkey"];
     const walletAddress = walletData["wallet"]["address"];
     const web3 = new Web3(alchemyKey["key"]);
-    const openseaBaseUrl = `https://testnets.opensea.io/assets/mumbai`;
+    const openseaBaseUrl = process.env.OPENSEA_URL;
     const contractAddress = org["contract"];
 
     console.log(`ourAddress: ${ourAddress}`);
