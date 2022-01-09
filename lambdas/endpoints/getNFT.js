@@ -38,6 +38,7 @@ export async function handler(event) {
         walletAddress: nftData["walletAddress"],
         openseaUrl: nftData["openseaUrl"],
         metadata: nftData["metadata"],
+        createdAt: nftData["createdAt"],
       },
     });
   } catch (e) {
