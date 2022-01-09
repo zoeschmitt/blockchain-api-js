@@ -138,6 +138,7 @@ export async function handler(event) {
       ipfsJSONHash: pinataJSONRes,
       pinataLink: tokenURI,
       metadata: metadata,
+      createdAt: Date.now()
     };
 
     const resNftData = {

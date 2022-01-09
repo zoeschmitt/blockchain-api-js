@@ -37,13 +37,10 @@ export async function handler(event) {
       encodedCryptoPrivKey["privkey"],
       "base64"
     ).toString("ascii");
-    console.log(cryptoPrivKey);
-    console.log(walletData["wallet"]["privateKey"]);
     const walletPrivateKey = Buffer.from(
       walletData["wallet"]["privateKey"],
       "base64"
     );
-    console.log(walletPrivateKey);
 
     const decryptedWalletPrivKey = crypto.privateDecrypt(
       cryptoPrivKey,
