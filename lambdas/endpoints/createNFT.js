@@ -7,8 +7,7 @@ import getSecrets from "../common/getSecrets";
 import axios from "axios";
 import FormData from "form-data";
 import nftContract from "../../contracts/NFT.json";
-import parser from "lambda-multipart-parser";
-import { Readable, Duplex } from "stream";
+import { Readable } from "stream";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
@@ -52,7 +51,7 @@ export async function handler(event) {
     });
     if (!walletData)
       return Responses._400({
-        message: "Failed to find wallet with that walletId",
+        message: "Couldn't find a wallet with that id",
       });
 
     // Uploading image to pinata
@@ -137,8 +136,9 @@ export async function handler(event) {
       ipfsImgHash: pinataFileRes,
       ipfsJSONHash: pinataJSONRes,
       pinataLink: tokenURI,
+      ipfsLink: `https://ipfs.io/ipfs/${pinataFileRes}`,
       metadata: metadata,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     const resNftData = {
