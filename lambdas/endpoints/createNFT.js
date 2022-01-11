@@ -1,13 +1,13 @@
 import getOrg from "../common/getOrg";
 import Responses from "../common/apiResponses";
 import Dynamo from "../common/dynamo";
-import Web3 from "web3";
 import { v4 as uuidv4 } from "uuid";
 import getSecrets from "../common/getSecrets";
-import axios from "axios";
 import FormData from "form-data";
 import nftContract from "../../contracts/NFT.json";
 import { Readable } from "stream";
+import mintNFT from "../helpers/createNFT/mintNFT";
+import Pinata from '../helpers/createNFT/pinata'
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
@@ -61,7 +61,7 @@ export async function handler(event) {
     let pinataData = new FormData();
     pinataData.append("file", stream, { filename: filename });
 
-    const pinataFileRes = await pinFileToIPFS(
+    const pinataFileRes = await Pinata.pinFileToIPFS(
       pinataData,
       pinataKeys["pinata_api_key"],
       pinataKeys["pinata_secret_api_key"]
@@ -71,7 +71,7 @@ export async function handler(event) {
 
     metadata["image"] = `https://gateway.pinata.cloud/ipfs/${pinataFileRes}`;
 
-    const pinataJSONRes = await pinJSONToIPFS(
+    const pinataJSONRes = await Pinata.pinJSONToIPFS(
       metadata,
       pinataKeys["pinata_api_key"],
       pinataKeys["pinata_secret_api_key"]
@@ -87,43 +87,21 @@ export async function handler(event) {
     // Minting NFT
     const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
     const ourWallet = await getSecrets(process.env.OUR_WALLET);
-    const ourAddress = ourWallet["address"];
-    const ourPrivateKey = ourWallet["privkey"];
-    const walletAddress = walletData["wallet"]["address"];
-    const web3 = new Web3(alchemyKey["key"]);
-    const openseaBaseUrl = process.env.OPENSEA_URL;
     const contractAddress = org["contract"];
+    const openseaBaseUrl = process.env.OPENSEA_URL;
+    const walletAddress = walletData["wallet"]["address"];
 
-    console.log(`ourAddress: ${ourAddress}`);
-    console.log(`contractAddress: ${contractAddress}`);
-    console.log(`walletAddress: ${walletAddress}`);
-
-    const contract = new web3.eth.Contract(nftContract.abi, contractAddress);
-
-    const txn = contract.methods.mintNFT(walletAddress, tokenURI);
-    const gas = await txn.estimateGas({ from: ourAddress });
-    const gasPrice = await web3.eth.getGasPrice();
-    console.log(`gas: ${gas}`);
-    console.log(`gasPrice: ${gasPrice}`);
-
-    const data = txn.encodeABI();
-    const nonce = await web3.eth.getTransactionCount(ourAddress, "latest");
-    const signedTxn = await web3.eth.accounts.signTransaction(
-      {
-        from: ourAddress,
-        to: contractAddress,
-        nonce: nonce,
-        data,
-        gas,
-        gasPrice,
-      },
-      ourPrivateKey
-    );
-    const txnReceipt = await web3.eth.sendSignedTransaction(
-      signedTxn.rawTransaction
+    const { tokenId, txnReceipt } = await mintNFT(
+      nftContract,
+      alchemyKey,
+      ourWallet,
+      walletAddress,
+      metadata,
+      tokenURI
     );
 
-    const tokenId = web3.utils.hexToNumber(txnReceipt.logs[0].topics[3]);
+    console.log(tokenId)
+    console.log(txnReceipt)
 
     const nftData = {
       nftId: nftId,
@@ -183,43 +161,3 @@ export async function handler(event) {
     return Responses._400({ message: "Failed to create nft" });
   }
 }
-
-const pinFileToIPFS = async (data, pinataApiKey, pinataSecretApiKey) => {
-  const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
-
-  return axios
-    .post(url, data, {
-      maxBodyLength: "Infinity", //this is needed to prevent axios from erroring out with large files
-      headers: {
-        "Content-Type": `multipart/form-data; boundary=${data._boundary}`,
-        pinata_api_key: pinataApiKey,
-        pinata_secret_api_key: pinataSecretApiKey,
-      },
-    })
-    .then(function (response) {
-      return response.data["IpfsHash"];
-    })
-    .catch(function (error) {
-      console.log(error);
-      return null;
-    });
-};
-
-const pinJSONToIPFS = async (JSONBody, pinataApiKey, pinataSecretApiKey) => {
-  const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
-  return axios
-    .post(url, JSONBody, {
-      headers: {
-        pinata_api_key: pinataApiKey,
-        pinata_secret_api_key: pinataSecretApiKey,
-      },
-    })
-    .then(function (response) {
-      console.log(response.data);
-      return response.data["IpfsHash"];
-    })
-    .catch(function (error) {
-      console.log(error);
-      return null;
-    });
-};
