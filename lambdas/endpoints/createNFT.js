@@ -54,6 +54,11 @@ export async function handler(event) {
         message: "Couldn't find a wallet with that id",
       });
 
+    // Getting our wallet info
+    const ourWallet = await getSecrets(process.env.OUR_WALLET);
+    const ourAddress = ourWallet["address"];
+    const ourPrivateKey = ourWallet["privkey"];
+
     // Uploading image to pinata
     const pinataKeys = await getSecrets(process.env.PINATA_KEY);
     const imgBuffer = Buffer.from(content, "base64");
@@ -69,7 +74,11 @@ export async function handler(event) {
 
     if (!pinataFileRes) throw "pinFileToIPFS error";
 
+    // Set image hash and royalties information.
+
     metadata["image"] = `https://gateway.pinata.cloud/ipfs/${pinataFileRes}`;
+    metadata["seller_fee_basis_points"] = 1000; // 10%
+    metadata["fee_recipient"] = ourAddress;
 
     const pinataJSONRes = await pinJSONToIPFS(
       metadata,
@@ -86,9 +95,6 @@ export async function handler(event) {
 
     // Minting NFT
     const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
-    const ourWallet = await getSecrets(process.env.OUR_WALLET);
-    const ourAddress = ourWallet["address"];
-    const ourPrivateKey = ourWallet["privkey"];
     const walletAddress = walletData["wallet"]["address"];
     const web3 = new Web3(alchemyKey["key"]);
     const openseaBaseUrl = process.env.OPENSEA_URL;
