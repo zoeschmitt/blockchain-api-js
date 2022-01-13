@@ -147,6 +147,11 @@ export async function handler(event) {
       createdAt: new Date().toISOString(),
     };
 
+    // Remove unneeded royalty info from metadata response.
+    if (metadata.seller_fee_basis_points !== undefined)
+      delete metadata.seller_fee_basis_points;
+    if (metadata.fee_recipient !== undefined) delete metadata.fee_recipient;
+
     const resNftData = {
       nftId: nftId,
       mintedBy: walletId,

@@ -30,6 +30,13 @@ export async function handler(event) {
     let nfts = [];
     for (let nft in nftQuery) {
       const nftData = nftQuery[nft]["nftData"];
+
+      // Remove unneeded royalty info from metadata response.
+      if (nftData.metadata.seller_fee_basis_points !== undefined)
+        delete nftData.metadata.seller_fee_basis_points;
+      if (nftData.metadata.fee_recipient !== undefined)
+        delete nftData.metadata.fee_recipient;
+
       nfts.push({
         nftId: nftData["nftId"],
         mintedBy: nftData["mintedBy"],
