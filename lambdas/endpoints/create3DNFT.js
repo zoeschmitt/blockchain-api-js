@@ -8,6 +8,7 @@ import axios from "axios";
 import FormData from "form-data";
 import nftContract from "../../contracts/NFT.json";
 import parser from "lambda-multipart-parser";
+import { Readable } from "stream";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
@@ -16,22 +17,30 @@ export async function handler(event) {
     // Verifying request data
     console.log(event);
     const request = await parser.parse(event);
-    let imgFile;
-    let objFile;
 
-    if (!request || !request["metadata"] || !request["files"]) {
+    if (
+      !request ||
+      !request["metadata"] ||
+      !request["files"] ||
+      !request["base64Img"]
+    ) {
       return Responses._400({
-        message: "Missing nft metadata or files from the request body",
+        message:
+          "Missing nft metadata, file, or base64Img from the request body",
       });
     }
 
     if (!event.pathParameters || !event.pathParameters.walletId)
       return Responses._404({ message: "walletId not found in path." });
 
+    const imgFile = request["base64Img"];
+    let objFile;
+
     try {
-      const files = await validateRequestFiles(request.files);
-      imgFile = files.imgFile;
-      objFile = files.objFile;
+      objFile = request["files"][0];
+      if (!objFile) throw "Object file not found.";
+      if (objFile.contentType !== "model/obj")
+        throw "Object file contentType must be of type .obj.";
     } catch (e) {
       console.log(e);
       return Responses._400({ message: e.toString() });
@@ -62,10 +71,11 @@ export async function handler(event) {
 
     // Uploading image to pinata
     const pinataKeys = await getSecrets(process.env.PINATA_KEY);
+    const imgBuffer = Buffer.from(imgFile, "base64");
+    const stream = Readable.from(imgBuffer);
+
     let pinataImgData = new FormData();
-    pinataImgData.append("file", imgFile["content"], {
-      filename: imgFile["filename"],
-    });
+    pinataImgData.append("file", stream, { filename: "img_preview.png" });
 
     let pinataObjData = new FormData();
     pinataObjData.append("file", objFile["content"], {
@@ -78,7 +88,7 @@ export async function handler(event) {
       pinataKeys["pinata_secret_api_key"]
     );
 
-    if (!pinataImgFileRes) throw "pinFileToIPFS error";
+    if (!pinataImgFileRes) throw "pinataImgFileRes error";
 
     const pinataObjFileRes = await pinFileToIPFS(
       pinataObjData,
@@ -86,7 +96,7 @@ export async function handler(event) {
       pinataKeys["pinata_secret_api_key"]
     );
 
-    if (!pinataObjFileRes) throw "pinFileToIPFS error";
+    if (!pinataObjFileRes) throw "pinataObjFileRes error";
 
     // Set image hash and royalties information.
     metadata["image"] = `https://ipfs.io/ipfs/${pinataImgFileRes}`;
@@ -238,19 +248,4 @@ const pinJSONToIPFS = async (JSONBody, pinataApiKey, pinataSecretApiKey) => {
       console.log(error);
       return null;
     });
-};
-
-const validateRequestFiles = async (files) => {
-  const objFile = files.find((file) => file.fieldname === "objectFile");
-  const imgFile = files.find(
-    (file) => file.fieldname === "file" && file.contentType === "image/png"
-  );
-  if (!objFile) throw "Object file not found.";
-  if (objFile.contentType !== "model/obj")
-    throw "Object file contentType must be of type .obj.";
-  if (!imgFile) throw "File with contentType image/png not found.";
-  if (files.length !== 2)
-    throw "To mint a 3d object you must send 2 files: the object file and an image file.";
-
-  return { imgFile, objFile };
 };
