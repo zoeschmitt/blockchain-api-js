@@ -91,7 +91,9 @@ export async function handler(event) {
     // Set image hash and royalties information.
     metadata["image"] = `https://ipfs.io/ipfs/${pinataImgFileRes}`;
     metadata["object_ipfs_hash"] = pinataObjFileRes;
-    metadata["external_url"] = `https://10xit-inc.github.io/3d-viewer/?object=${pinataObjFileRes}&filename=${objFile["filename"]}`;
+    metadata[
+      "external_url"
+    ] = `https://10xit-inc.github.io/3d-viewer/?object=${pinataObjFileRes}&filename=${objFile["filename"]}`;
     metadata["seller_fee_basis_points"] = 1000; // 10%
     metadata["fee_recipient"] = ourAddress;
 
@@ -143,7 +145,7 @@ export async function handler(event) {
       mintedBy: walletId,
       walletAddress: walletAddress,
       openseaUrl: `${openseaBaseUrl}/${contractAddress}/${tokenId}`,
-      ipfsImgHash: pinataFileRes,
+      ipfsImgHash: pinataImgFileRes,
       ipfsJSONHash: pinataJSONRes,
       ipfsLink: tokenURI,
       metadata: metadata,
@@ -244,6 +246,8 @@ const validateRequestFiles = async (files) => {
     (file) => file.fieldname === "file" && file.contentType === "image/png"
   );
   if (!objFile) throw "Object file not found.";
+  if (objFile.contentType !== "model/obj")
+    throw "Object file contentType must be of type .obj.";
   if (!imgFile) throw "File with contentType image/png not found.";
   if (files.length !== 2)
     throw "To mint a 3d object you must send 2 files: the object file and an image file.";
