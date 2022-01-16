@@ -7,37 +7,38 @@ import getSecrets from "../common/getSecrets";
 import axios from "axios";
 import FormData from "form-data";
 import nftContract from "../../contracts/NFT.json";
-import { Readable } from "stream";
+import parser from "lambda-multipart-parser";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
   const nftId = uuidv4();
   try {
     // Verifying request data
-    const request = JSON.parse(event.body);
     console.log(event);
-    if (
-      !request ||
-      !request["metadata"] ||
-      !request["content"] ||
-      !request["filename"]
-    ) {
+    const request = await parser.parse(event);
+    let imgFile;
+    let objFile;
+
+    if (!request || !request["metadata"] || !request["files"]) {
       return Responses._400({
-        message:
-          "Missing nft metadata, filename, or content from the request body",
+        message: "Missing nft metadata or files from the request body",
       });
     }
 
     if (!event.pathParameters || !event.pathParameters.walletId)
       return Responses._404({ message: "walletId not found in path." });
 
-    const walletId = event.pathParameters.walletId;
-    const content = request["content"].includes(",")
-      ? request["content"].split(",")[1]
-      : request["content"];
-    const metadata = request["metadata"];
-    const filename = request["filename"];
+    try {
+      const files = await validateRequestFiles(request.files);
+      imgFile = files.imgFile;
+      objFile = files.objFile;
+    } catch (e) {
+      console.log(e);
+      return Responses._400({ message: e.toString() });
+    }
 
+    const walletId = event.pathParameters.walletId;
+    const metadata = JSON.parse(request["metadata"]);
     const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
 
@@ -61,22 +62,36 @@ export async function handler(event) {
 
     // Uploading image to pinata
     const pinataKeys = await getSecrets(process.env.PINATA_KEY);
-    const imgBuffer = Buffer.from(content, "base64");
-    const stream = Readable.from(imgBuffer);
-    let pinataData = new FormData();
-    pinataData.append("file", stream, { filename: filename });
+    let pinataImgData = new FormData();
+    pinataImgData.append("file", imgFile["content"], {
+      filename: imgFile["filename"],
+    });
 
-    const pinataFileRes = await pinFileToIPFS(
-      pinataData,
+    let pinataObjData = new FormData();
+    pinataObjData.append("file", objFile["content"], {
+      filename: objFile["filename"],
+    });
+
+    const pinataImgFileRes = await pinFileToIPFS(
+      pinataImgData,
       pinataKeys["pinata_api_key"],
       pinataKeys["pinata_secret_api_key"]
     );
 
-    if (!pinataFileRes) throw "pinFileToIPFS error";
+    if (!pinataImgFileRes) throw "pinFileToIPFS error";
+
+    const pinataObjFileRes = await pinFileToIPFS(
+      pinataObjData,
+      pinataKeys["pinata_api_key"],
+      pinataKeys["pinata_secret_api_key"]
+    );
+
+    if (!pinataObjFileRes) throw "pinFileToIPFS error";
 
     // Set image hash and royalties information.
-
-    metadata["image"] = `https://ipfs.io/ipfs/${pinataFileRes}`;
+    metadata["image"] = `https://ipfs.io/ipfs/${pinataImgFileRes}`;
+    metadata["object_ipfs_hash"] = pinataObjFileRes;
+    metadata["external_url"] = `https://10xit-inc.github.io/3d-viewer/?object=${pinataObjFileRes}&filename=${objFile["filename"]}`;
     metadata["seller_fee_basis_points"] = 1000; // 10%
     metadata["fee_recipient"] = ourAddress;
 
@@ -88,9 +103,6 @@ export async function handler(event) {
 
     if (!pinataJSONRes) throw "pinataJSONRes error";
 
-    console.log(pinataFileRes);
-    console.log(pinataJSONRes);
-
     const tokenURI = `https://ipfs.io/ipfs/${pinataJSONRes}`;
 
     // Minting NFT
@@ -99,19 +111,11 @@ export async function handler(event) {
     const web3 = new Web3(alchemyKey["key"]);
     const openseaBaseUrl = process.env.OPENSEA_URL;
     const contractAddress = org["contract"];
-
-    console.log(`ourAddress: ${ourAddress}`);
-    console.log(`contractAddress: ${contractAddress}`);
-    console.log(`walletAddress: ${walletAddress}`);
-
     const contract = new web3.eth.Contract(nftContract.abi, contractAddress);
 
     const txn = contract.methods.mintNFT(walletAddress, tokenURI);
     const gas = await txn.estimateGas({ from: ourAddress });
     const gasPrice = await web3.eth.getGasPrice();
-    console.log(`gas: ${gas}`);
-    console.log(`gasPrice: ${gasPrice}`);
-
     const data = txn.encodeABI();
     const nonce = await web3.eth.getTransactionCount(ourAddress, "latest");
     const signedTxn = await web3.eth.accounts.signTransaction(
@@ -232,4 +236,17 @@ const pinJSONToIPFS = async (JSONBody, pinataApiKey, pinataSecretApiKey) => {
       console.log(error);
       return null;
     });
+};
+
+const validateRequestFiles = async (files) => {
+  const objFile = files.find((file) => file.fieldname === "objectFile");
+  const imgFile = files.find(
+    (file) => file.fieldname === "file" && file.contentType === "image/png"
+  );
+  if (!objFile) throw "Object file not found.";
+  if (!imgFile) throw "File with contentType image/png not found.";
+  if (files.length !== 2)
+    throw "To mint a 3d object you must send 2 files: the object file and an image file.";
+
+  return { imgFile, objFile };
 };

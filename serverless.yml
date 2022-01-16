@@ -82,6 +82,13 @@ functions:
           path: create-nft/{walletId}
           method: POST
           cors: true
+  create3DNFT:
+    handler: lambdas/endpoints/create3DNFT.handler
+    events:
+      - http:
+          path: create-3d-nft/{walletId}
+          method: POST
+          cors: true
   getAllNFTs:
     handler: lambdas/endpoints/getAllNFTs.handler
     events:
@@ -118,7 +125,6 @@ functions:
           path: get-wallet/{walletId}
           method: GET
           cors: true
-
 # resources:
 #   Resources:
 #     10xitprod:
