@@ -13,6 +13,7 @@ import { Readable } from "stream";
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
   const nftId = uuidv4();
+  console.log(`nftId: ${nftId}`);
   try {
     // Verifying request data
     console.log(event);
@@ -26,7 +27,7 @@ export async function handler(event) {
     ) {
       return Responses._400({
         message:
-          "Missing nft metadata, file, or base64Img from the request body",
+          "Missing nft metadata, objectFile, or base64Img from the request body",
       });
     }
 
@@ -39,7 +40,7 @@ export async function handler(event) {
     try {
       objFile = request["files"][0];
       if (!objFile) throw "Object file not found.";
-      if (objFile.contentType !== "model/obj")
+      if (!objFile.filename.includes("obj"))
         throw "Object file contentType must be of type .obj.";
     } catch (e) {
       console.log(e);
@@ -115,6 +116,8 @@ export async function handler(event) {
 
     if (!pinataJSONRes) throw "pinataJSONRes error";
 
+    console.log("IPFS pinning complete.");
+
     const tokenURI = `https://ipfs.io/ipfs/${pinataJSONRes}`;
 
     // Minting NFT
@@ -128,6 +131,7 @@ export async function handler(event) {
     const txn = contract.methods.mintNFT(walletAddress, tokenURI);
     const gas = await txn.estimateGas({ from: ourAddress });
     const gasPrice = await web3.eth.getGasPrice();
+    console.log(`Current gas price: ${gasPrice}, estimated gas: ${gas}`);
     const data = txn.encodeABI();
     const nonce = await web3.eth.getTransactionCount(ourAddress, "latest");
     const signedTxn = await web3.eth.accounts.signTransaction(
@@ -141,12 +145,14 @@ export async function handler(event) {
       },
       ourPrivateKey
     );
+
+    console.log(`Sending raw transaction at: ${new Date().toISOString()}`)
     const txnReceipt = await web3.eth.sendSignedTransaction(
       signedTxn.rawTransaction
     );
+    console.log(txnReceipt);
 
     const tokenId = web3.utils.hexToNumber(txnReceipt.logs[0].topics[3]);
-
     const nftData = {
       nftId: nftId,
       contract: contractAddress,
@@ -241,7 +247,6 @@ const pinJSONToIPFS = async (JSONBody, pinataApiKey, pinataSecretApiKey) => {
       },
     })
     .then(function (response) {
-      console.log(response.data);
       return response.data["IpfsHash"];
     })
     .catch(function (error) {
