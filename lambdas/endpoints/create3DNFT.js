@@ -14,7 +14,7 @@ export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
   const nftId = uuidv4();
   console.log(`nftId: ${nftId}`);
-  
+
   try {
     // Verifying request data
     console.log(event);
@@ -48,9 +48,18 @@ export async function handler(event) {
     }
 
     const walletId = event.pathParameters.walletId;
-    const metadata = JSON.parse(request["metadata"]);
     const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
+    let metadata;
+
+    try {
+      // Verifying request data
+      metadata = JSON.parse(request["metadata"]);
+    } catch (e) {
+      return Responses._400({
+        message: `JSON error parsing metadata: ${e}`,
+      });
+    }
 
     let walletData;
 

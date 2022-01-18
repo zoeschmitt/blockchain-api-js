@@ -14,8 +14,15 @@ export async function handler(event) {
   const nftId = uuidv4();
   console.log(`nftId: ${nftId}`);
   try {
-    // Verifying request data
-    const request = JSON.parse(event.body);
+    let request;
+    try {
+      // Verifying request data
+      request = JSON.parse(event.body);
+    } catch (e) {
+      return Responses._400({
+        message: `JSON error parsing request body: ${e}`,
+      });
+    }
     console.log(event);
     if (
       !request ||
@@ -78,7 +85,7 @@ export async function handler(event) {
 
     metadata["image"] = `https://ipfs.io/ipfs/${pinataFileRes}`;
     metadata["seller_fee_basis_points"] = 1000; // 10%
-    metadata["fee_recipient"] = ourWallet['address'];
+    metadata["fee_recipient"] = ourWallet["address"];
 
     const pinataJSONRes = await Pinata.pinJSONToIPFS(
       metadata,
@@ -157,6 +164,8 @@ export async function handler(event) {
     return Responses._200({ nft: resNftData });
   } catch (e) {
     console.log(`ERROR - nftId: ${nftId} error: ${e.toString()}`);
-    return Responses._400({ message: "Failed to create NFT, our development team has been notified." });
+    return Responses._400({
+      message: "Failed to create NFT, our development team has been notified.",
+    });
   }
 }
