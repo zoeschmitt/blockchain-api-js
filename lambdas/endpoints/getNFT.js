@@ -31,6 +31,13 @@ export async function handler(event) {
       return Responses._404({ message: `Failed to get nft with id ${id}` });
     }
     const nftData = nft["nftData"];
+
+    // Remove unneeded royalty info from metadata response.
+    if (nftData.metadata.seller_fee_basis_points !== undefined)
+      delete nftData.metadata.seller_fee_basis_points;
+    if (nftData.metadata.fee_recipient !== undefined)
+      delete nftData.metadata.fee_recipient;
+
     return Responses._200({
       nft: {
         nftId: nftData["nftId"],

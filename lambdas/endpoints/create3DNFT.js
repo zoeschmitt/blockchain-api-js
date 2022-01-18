@@ -3,11 +3,12 @@ import Responses from "../common/apiResponses";
 import Dynamo from "../common/dynamo";
 import { v4 as uuidv4 } from "uuid";
 import getSecrets from "../common/getSecrets";
+import Pinata from "../helpers/pinata";
 import FormData from "form-data";
 import nftContract from "../../contracts/NFT.json";
+import parser from "lambda-multipart-parser";
 import { Readable } from "stream";
 import mintNFT from "../common/nft/mintNFT";
-import Pinata from "../helpers/pinata";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
@@ -15,32 +16,42 @@ export async function handler(event) {
   console.log(`nftId: ${nftId}`);
   try {
     // Verifying request data
-    const request = JSON.parse(event.body);
     console.log(event);
+    const request = await parser.parse(event);
+
     if (
       !request ||
       !request["metadata"] ||
-      !request["content"] ||
-      !request["filename"]
+      !request["files"] ||
+      !request["base64Img"]
     )
       return Responses._400({
         message:
-          "Missing nft metadata, filename, or image content from the request body",
+          "Missing nft metadata, objectFile, or base64Img from the request body",
       });
 
     if (!event.pathParameters || !event.pathParameters.walletId)
       return Responses._404({ message: "walletId not found in path." });
 
-    const walletId = event.pathParameters.walletId;
-    const content = request["content"].includes(",")
-      ? request["content"].split(",")[1]
-      : request["content"];
-    const metadata = request["metadata"];
-    const filename = request["filename"];
+    const imgFile = request["base64Img"];
+    let objFile;
 
+    try {
+      objFile = request["files"][0];
+      if (!objFile) throw "Object file not found.";
+      if (!objFile.filename.includes("obj"))
+        throw "Object file contentType must be of type .obj.";
+    } catch (e) {
+      console.log(e);
+      return Responses._400({ message: e.toString() });
+    }
+
+    const walletId = event.pathParameters.walletId;
+    const metadata = JSON.parse(request["metadata"]);
     const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
 
+    // // Fetching wallet details with walletId from req
     try {
       const walletData = await Dynamo.get({
         TableName: tableName,
@@ -62,26 +73,43 @@ export async function handler(event) {
 
     // Uploading image to pinata
     const pinataKeys = await getSecrets(process.env.PINATA_KEY);
-    const imgBuffer = Buffer.from(content, "base64");
+    const imgBuffer = Buffer.from(imgFile, "base64");
     const stream = Readable.from(imgBuffer);
-    let pinataData = new FormData();
-    pinataData.append("file", stream, { filename: filename });
 
-    const pinataFileRes = await Pinata.pinFileToIPFS(
-      pinataData,
+    let pinataImgData = new FormData();
+    pinataImgData.append("file", stream, { filename: "img_preview.png" });
+
+    let pinataObjData = new FormData();
+    pinataObjData.append("file", objFile["content"], {
+      filename: objFile["filename"],
+    });
+
+    const pinataImgFileRes = await Pinata.pinFileToIPFS(
+      pinataImgData,
       pinataKeys["pinata_api_key"],
       pinataKeys["pinata_secret_api_key"]
     );
 
-    if (!pinataFileRes) throw "pinFileToIPFS error";
+    if (!pinataImgFileRes) throw "pinataImgFileRes error";
+
+    const pinataObjFileRes = await Pinata.pinFileToIPFS(
+      pinataObjData,
+      pinataKeys["pinata_api_key"],
+      pinataKeys["pinata_secret_api_key"]
+    );
+
+    if (!pinataObjFileRes) throw "pinataObjFileRes error";
 
     // Set image hash and royalties information.
-
-    metadata["image"] = `https://ipfs.io/ipfs/${pinataFileRes}`;
+    metadata["image"] = `https://ipfs.io/ipfs/${pinataImgFileRes}`;
+    metadata["object_ipfs_hash"] = pinataObjFileRes;
+    metadata[
+      "external_url"
+    ] = `https://10xit-inc.github.io/3d-viewer/?object=${pinataObjFileRes}&filename=${objFile["filename"]}`;
     metadata["seller_fee_basis_points"] = 1000; // 10%
     metadata["fee_recipient"] = ourAddress;
 
-    const pinataJSONRes = await Pinata.pinJSONToIPFS(
+    const pinataJSONRes = await pinJSONToIPFS(
       metadata,
       pinataKeys["pinata_api_key"],
       pinataKeys["pinata_secret_api_key"]
@@ -89,17 +117,15 @@ export async function handler(event) {
 
     if (!pinataJSONRes) throw "pinataJSONRes error";
 
-    console.log(pinataFileRes);
-    console.log(pinataJSONRes);
+    console.log("IPFS pinning complete.");
 
     const tokenURI = `https://ipfs.io/ipfs/${pinataJSONRes}`;
 
     // Minting NFT
     const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
-    const ourWallet = await getSecrets(process.env.OUR_WALLET);
-    const contractAddress = org["contract"];
-    const openseaBaseUrl = process.env.OPENSEA_URL;
     const walletAddress = walletData["wallet"]["address"];
+    const openseaBaseUrl = process.env.OPENSEA_URL;
+    const contractAddress = org["contract"];
 
     const { tokenId, txnReceipt } = await mintNFT(
       nftContract,
@@ -110,9 +136,6 @@ export async function handler(event) {
       tokenURI
     );
 
-    console.log(tokenId);
-    console.log(txnReceipt);
-
     const nftData = {
       nftId: nftId,
       contract: contractAddress,
@@ -121,7 +144,7 @@ export async function handler(event) {
       mintedBy: walletId,
       walletAddress: walletAddress,
       openseaUrl: `${openseaBaseUrl}/${contractAddress}/${tokenId}`,
-      ipfsImgHash: pinataFileRes,
+      ipfsImgHash: pinataImgFileRes,
       ipfsJSONHash: pinataJSONRes,
       ipfsLink: tokenURI,
       metadata: metadata,
@@ -159,6 +182,8 @@ export async function handler(event) {
     return Responses._200({ nft: resNftData });
   } catch (e) {
     console.log(`ERROR - nftId: ${nftId} error: ${e.toString()}`);
-    return Responses._400({ message: "Failed to create NFT, our development team has been notified." });
+    return Responses._400({
+      message: "Failed to create nft, our development team has been notified.",
+    });
   }
 }

@@ -31,7 +31,6 @@ const pinJSONToIPFS = async (JSONBody, pinataApiKey, pinataSecretApiKey) => {
       },
     })
     .then(function (response) {
-      console.log(response.data);
       return response.data["IpfsHash"];
     })
     .catch(function (error) {

@@ -1,10 +1,8 @@
 import Responses from "../common/apiResponses";
 import Dynamo from "../common/dynamo";
-import Web3 from "web3";
 import { v4 as uuidv4 } from "uuid";
 import getSecrets from "../common/getSecrets";
-import { Buffer } from "buffer";
-import crypto from "crypto";
+import generateWallet from "../common/wallet/generateWallet";
 
 export async function handler(event) {
   const orgId = uuidv4();
@@ -17,30 +15,19 @@ export async function handler(event) {
       !request["apiKey"] ||
       !request["contract"] ||
       !request["tier"]
-    ) {
+    )
       return Responses._400({
         message:
           "Missing the organization name or apiKey or tier from the request body",
       });
-    }
     const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
     const encodedCryptoPubKey = await getSecrets(process.env.WALLETS_PUB_KEY);
-    const cryptoPubKey = Buffer.from(
-      encodedCryptoPubKey["pubkey"],
-      "base64"
-    ).toString("ascii");
-    const web3 = new Web3(alchemyKey["key"]);
-    const newWallet = web3.eth.accounts.create([orgId]);
 
-    const encryptedWalletPrivKey = crypto.publicEncrypt(
-      cryptoPubKey,
-      Buffer.from(newWallet["privateKey"])
+    const walletData = await generateWallet(
+      alchemyKey,
+      encodedCryptoPubKey,
+      orgId
     );
-
-    const walletData = {
-      address: newWallet["address"],
-      privateKey: encryptedWalletPrivKey.toString("base64"),
-    };
 
     const orgData = {
       orgId: orgId,
@@ -56,10 +43,7 @@ export async function handler(event) {
       orgData,
     };
 
-    await Dynamo.put(orgKeyData, tableName).catch((err) => {
-      console.log("error in dynamo write", err);
-      return null;
-    });
+    await Dynamo.put(orgKeyData, tableName);
 
     const org = {
       PK: `ORG#${orgId}`,
@@ -67,18 +51,13 @@ export async function handler(event) {
       orgData,
     };
 
-    const res = await Dynamo.put(org, tableName).catch((err) => {
-      console.log("error in dynamo write", err);
-      return null;
-    });
-
-    if (!res) {
-      return Responses._400({ message: "Failed to create org" });
-    }
+    await Dynamo.put(org, tableName);
 
     return Responses._200({ orgId: orgId });
   } catch (e) {
-    console.log(`createOrg error - orgId: ${orgId} error: ${e.toString()}`);
-    return Responses._400({ message: "Failed to create org" });
+    console.log(`Error - orgId: ${orgId} error: ${e.toString()}`);
+    return Responses._400({
+      message: `Error - orgId: ${orgId} error: ${e.toString()}`,
+    });
   }
 }

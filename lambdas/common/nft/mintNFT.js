@@ -1,5 +1,4 @@
 import Web3 from "web3";
-import Responses from "../../common/apiResponses";
 
 const mintNFT = async (
   nftContract,
@@ -7,21 +6,21 @@ const mintNFT = async (
   ourWallet,
   clientWalletAddress,
   contractAddress,
-  metadata,
   tokenURI
 ) => {
   try {
-    const ourAddress = ourWallet['address'];
+    const ourAddress = ourWallet["address"];
+    const ourPrivateKey = ourWallet["privkey"];
     const web3 = new Web3(alchemyKey["key"]);
 
     console.log(`contractAddress: ${contractAddress}`);
-    console.log(`walletAddress: ${clientWalletAddress}`);
+    console.log(`clientWalletAddress: ${clientWalletAddress}`);
 
     const contract = new web3.eth.Contract(nftContract.abi, contractAddress);
-
     const txn = contract.methods.mintNFT(clientWalletAddress, tokenURI);
     const gas = await txn.estimateGas({ from: ourAddress });
     const gasPrice = await web3.eth.getGasPrice();
+
     console.log(`gas: ${gas}`);
     console.log(`gasPrice: ${gasPrice}`);
 
@@ -38,17 +37,15 @@ const mintNFT = async (
       },
       ourPrivateKey
     );
+    console.log(`Sending raw transaction at: ${new Date().toISOString()}`);
     const txnReceipt = await web3.eth.sendSignedTransaction(
       signedTxn.rawTransaction
     );
-
     const tokenId = web3.utils.hexToNumber(txnReceipt.logs[0].topics[3]);
     return { tokenId: tokenId, txnReceipt: txnReceipt };
   } catch (e) {
     console.log(e);
-    return Responses._400({
-      message: "Blockchain network error.",
-    });
+    throw "Blockchain error, please try again in a few minutes or contact support.";
   }
 };
 
