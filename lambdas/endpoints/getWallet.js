@@ -19,28 +19,28 @@ export async function handler(event) {
     const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
 
-    // // Fetching wallet details with walletId from req
-    const walletData = await Dynamo.get({
-      TableName: tableName,
-      Key: {
-        PK: `ORG#${orgId}#WAL#${walletId}`,
-        SK: `ORG#${orgId}`,
-      },
-    });
-    if (!walletData)
-      return Responses._400({
-        message: "Failed to find wallet with that walletId",
-      });
+    let walletData;
+
+    try {
+        walletData = await Dynamo.get({
+          TableName: tableName,
+          Key: {
+            PK: `ORG#${orgId}#WAL#${walletId}`,
+            SK: `ORG#${orgId}`,
+          },
+        });
+        if (!walletData) throw "Wallet not found";
+      } catch (e) {
+        return Responses._404({
+          message: `Wallet not found with walletId ${walletId}`,
+        });
+      }
 
     const encodedCryptoPrivKey = await getSecrets(process.env.WALLETS_PRIV_KEY);
     const cryptoPrivKey = Buffer.from(
       encodedCryptoPrivKey["privkey"],
       "base64"
     ).toString("ascii");
-    const walletPrivateKey = Buffer.from(
-      walletData["wallet"]["privateKey"],
-      "base64"
-    );
 
     const decryptedWalletPrivKey = crypto.privateDecrypt(
       cryptoPrivKey,
@@ -56,8 +56,8 @@ export async function handler(event) {
     return Responses._200({ wallet: data });
   } catch (e) {
     console.log(
-      `getWallet error - walletId: ${walletId} error: ${e.toString()}`
+      `ERROR - walletId: ${walletId} error: ${e.toString()}`
     );
-    return Responses._400({ message: "Failed to get wallet" });
+    return Responses._400({ message: "Failed to get wallet, our development team has been notified" });
   }
 }

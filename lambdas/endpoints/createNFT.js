@@ -41,8 +41,10 @@ export async function handler(event) {
     const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
 
+    let walletData;
+
     try {
-      const walletData = await Dynamo.get({
+      walletData = await Dynamo.get({
         TableName: tableName,
         Key: {
           PK: `ORG#${orgId}#WAL#${walletId}`,
