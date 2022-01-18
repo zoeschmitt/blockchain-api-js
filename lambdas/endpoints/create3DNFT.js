@@ -134,7 +134,7 @@ export async function handler(event) {
       alchemyKey,
       ourWallet,
       walletAddress,
-      metadata,
+      contractAddress,
       tokenURI
     );
 
