@@ -111,7 +111,7 @@ export async function handler(event) {
     metadata["seller_fee_basis_points"] = 1000; // 10%
     metadata["fee_recipient"] = ourAddress;
 
-    const pinataJSONRes = await pinJSONToIPFS(
+    const pinataJSONRes = await Pinata.pinJSONToIPFS(
       metadata,
       pinataKeys["pinata_api_key"],
       pinataKeys["pinata_secret_api_key"]
