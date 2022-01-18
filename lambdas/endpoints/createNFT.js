@@ -7,7 +7,7 @@ import FormData from "form-data";
 import nftContract from "../../contracts/NFT.json";
 import { Readable } from "stream";
 import mintNFT from "../common/nft/mintNFT";
-import Pinata from "../helpers/pinata";
+import Pinata from "../common/nft/pinata";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
@@ -40,6 +40,7 @@ export async function handler(event) {
 
     const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
+    const ourWallet = await getSecrets(process.env.OUR_WALLET);
 
     let walletData;
 
@@ -57,10 +58,6 @@ export async function handler(event) {
         message: `Wallet not found with walletId ${walletId}`,
       });
     }
-
-    // Getting our wallet info
-    const ourWallet = await getSecrets(process.env.OUR_WALLET);
-    const ourAddress = ourWallet["address"];
 
     // Uploading image to pinata
     const pinataKeys = await getSecrets(process.env.PINATA_KEY);
@@ -81,7 +78,7 @@ export async function handler(event) {
 
     metadata["image"] = `https://ipfs.io/ipfs/${pinataFileRes}`;
     metadata["seller_fee_basis_points"] = 1000; // 10%
-    metadata["fee_recipient"] = ourAddress;
+    metadata["fee_recipient"] = ourWallet['address'];
 
     const pinataJSONRes = await Pinata.pinJSONToIPFS(
       metadata,
@@ -98,7 +95,6 @@ export async function handler(event) {
 
     // Minting NFT
     const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
-    const ourWallet = await getSecrets(process.env.OUR_WALLET);
     const contractAddress = org["contract"];
     const openseaBaseUrl = process.env.OPENSEA_URL;
     const walletAddress = walletData["wallet"]["address"];
