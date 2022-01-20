@@ -50,6 +50,7 @@ export async function handler(event) {
     const walletId = event.pathParameters.walletId;
     const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
+    const orgWalletAddress = org["wallet"]["address"];
     let metadata;
 
     try {
@@ -118,7 +119,7 @@ export async function handler(event) {
       "external_url"
     ] = `https://10xit-inc.github.io/3d-viewer/?object=${pinataObjFileRes}&filename=${objFile["filename"]}`;
     metadata["seller_fee_basis_points"] = 1000; // 10%
-    metadata["fee_recipient"] = ourAddress;
+    metadata["fee_recipient"] = orgWalletAddress;
 
     const pinataJSONRes = await Pinata.pinJSONToIPFS(
       metadata,

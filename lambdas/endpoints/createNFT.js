@@ -47,6 +47,7 @@ export async function handler(event) {
 
     const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
+    const orgWalletAddress = org["wallet"]["address"];
     const ourWallet = await getSecrets(process.env.OUR_WALLET);
 
     let walletData;
@@ -85,7 +86,7 @@ export async function handler(event) {
 
     metadata["image"] = `https://ipfs.io/ipfs/${pinataFileRes}`;
     metadata["seller_fee_basis_points"] = 1000; // 10%
-    metadata["fee_recipient"] = ourWallet["address"];
+    metadata["fee_recipient"] = orgWalletAddress;
 
     const pinataJSONRes = await Pinata.pinJSONToIPFS(
       metadata,
