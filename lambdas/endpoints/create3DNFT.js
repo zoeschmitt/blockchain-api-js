@@ -18,49 +18,13 @@ export async function handler(event) {
   try {
     // Verifying request data
     console.log(event);
-    const request = await parser.parse(event);
 
-    if (
-      !request ||
-      !request["metadata"] ||
-      !request["files"] ||
-      !request["base64Img"]
-    )
-      return Responses._400({
-        message:
-          "Missing nft metadata, objectFile, or base64Img from the request body",
-      });
+    const { walletId, objFile, imgFile, metadata } =
+      verifyAndParseRequest(event);
 
-    if (!event.pathParameters || !event.pathParameters.walletId)
-      return Responses._404({ message: "walletId not found in path." });
-
-    const imgFile = request["base64Img"];
-    let objFile;
-
-    try {
-      objFile = request["files"][0];
-      if (!objFile) throw "Object file not found.";
-      if (!objFile.filename.includes("obj"))
-        throw "Object file contentType must be of type .obj.";
-    } catch (e) {
-      console.log(e);
-      return Responses._400({ message: e.toString() });
-    }
-
-    const walletId = event.pathParameters.walletId;
     const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
     const orgWalletAddress = org["wallet"]["address"];
-    let metadata;
-
-    try {
-      // Verifying request data
-      metadata = JSON.parse(request["metadata"]);
-    } catch (e) {
-      return Responses._400({
-        message: `JSON error parsing metadata: ${e}`,
-      });
-    }
 
     let walletData;
 
@@ -81,7 +45,6 @@ export async function handler(event) {
 
     // Getting our wallet info
     const ourWallet = await getSecrets(process.env.OUR_WALLET);
-    const ourAddress = ourWallet["address"];
 
     // Uploading image to pinata
     const pinataKeys = await getSecrets(process.env.PINATA_KEY);
@@ -199,3 +162,58 @@ export async function handler(event) {
     });
   }
 }
+// returns walletId, objFile, imgFile, metadata
+const verifyAndParseRequest = (event) => {
+  let request;
+  try {
+    request = await parser.parse(event);
+  } catch (e) {
+    return Responses._400({ message: e.toString() });
+  }
+
+  if (!event.pathParameters || !event.pathParameters.walletId)
+    return Responses._404({ message: "walletId not found in path." });
+
+  if (!request["metadata"] || request["metadata"] !== typeof "string")
+    return Responses._400({
+      message:
+        "Error with NFT metadata. Make sure you're sending a stringified JSON object.",
+    });
+
+  if (!request["base64Img"] || request["base64Img"] !== typeof "string")
+    return Responses._400({
+      message:
+        "Error with parsing base64Img. Make sure you are sending a base64 string, rather than a file.",
+    });
+
+  const imgFile = request["base64Img"];
+  let objFile;
+
+  try {
+    objFile = request["files"][0];
+    if (!objFile) throw "Object file not found.";
+    if (!objFile.filename.includes("obj"))
+      throw "Object file contentType must be of type .obj.";
+  } catch (e) {
+    console.log(e);
+    return Responses._400({ message: e.toString() });
+  }
+
+  const walletId = event.pathParameters.walletId;
+  let metadata;
+
+  try {
+    metadata = JSON.parse(request["metadata"]);
+  } catch (e) {
+    return Responses._400({
+      message: `JSON error parsing metadata: ${e}`,
+    });
+  }
+
+  return {
+    walletId: walletId,
+    objFile: objFile,
+    imgFile: imgFile,
+    metadata: metadata,
+  };
+};
