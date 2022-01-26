@@ -125,16 +125,3 @@ functions:
           path: get-wallet/{walletId}
           method: GET
           cors: true
-# resources:
-#   Resources:
-#     10xitprod:
-#       Type: AWS::DynamoDB::Table
-#       Properties:
-#         TableName: ${self:custom.TABLE_NAME}
-#         AttributeDefinitions:
-#           - AttributeName: PK
-#             AttributeType: S
-#         KeySchema:
-#           - AttributeName: SK
-#             KeyType: S
-#         BillingMode: PAY_PER_REQUEST

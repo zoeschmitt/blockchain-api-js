@@ -19,30 +19,42 @@ export async function handler(event) {
     // Verifying request data
     console.log(event);
 
-    const { walletId, objFile, imgFile, metadata } =
-      verifyAndParseRequest(event);
+    if (!event.pathParameters || !event.pathParameters.walletId)
+      return Responses._404({ message: "walletId not found in path." });
+
+    const walletId = event.pathParameters.walletId;
+
+    let parseRequest;
+    try {
+      parseRequest = await verifyAndParseRequest(event);
+    } catch (e) {
+      console.log(e);
+      return Responses._400({ message: e.toString() });
+    }
+    const { objFile, imgFile, metadata } = parseRequest;
 
     const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
     const orgWalletAddress = org["wallet"]["address"];
 
-    let walletData;
+    let tempWallet;
 
     try {
-      walletData = await Dynamo.get({
+      tempWallet = await Dynamo.get({
         TableName: tableName,
         Key: {
           PK: `ORG#${orgId}#WAL#${walletId}`,
           SK: `ORG#${orgId}`,
         },
       });
-      if (!walletData) throw "Wallet not found";
+      if (!tempWallet) throw "Wallet not found";
     } catch (e) {
+      console.log(e);
       return Responses._404({
         message: `Wallet not found with walletId ${walletId}`,
       });
     }
-
+    const walletData = tempWallet;
     // Getting our wallet info
     const ourWallet = await getSecrets(process.env.OUR_WALLET);
 
@@ -78,9 +90,7 @@ export async function handler(event) {
     // Set image hash and royalties information.
     metadata["image"] = `https://ipfs.io/ipfs/${pinataImgFileRes}`;
     metadata["object_ipfs_hash"] = pinataObjFileRes;
-    metadata[
-      "external_url"
-    ] = `https://10xit-inc.github.io/3d-viewer/?object=${pinataObjFileRes}&filename=${objFile["filename"]}`;
+    // metadata["external_url"] = `https://10xit-inc.github.io/3d-viewer/?object=${pinataObjFileRes}&filename=${objFile["filename"]}`;
     metadata["seller_fee_basis_points"] = 1000; // 10%
     metadata["fee_recipient"] = orgWalletAddress;
 
@@ -162,56 +172,34 @@ export async function handler(event) {
     });
   }
 }
-// returns walletId, objFile, imgFile, metadata
-const verifyAndParseRequest = (event) => {
+// returns objFile, imgFile, metadata
+const verifyAndParseRequest = async (event) => {
   let request;
   try {
     request = await parser.parse(event);
   } catch (e) {
-    return Responses._400({ message: e.toString() });
+    throw e.toString();
   }
 
-  if (!event.pathParameters || !event.pathParameters.walletId)
-    return Responses._404({ message: "walletId not found in path." });
-
-  if (!request["metadata"] || request["metadata"] !== typeof "string")
-    return Responses._400({
-      message:
-        "Error with NFT metadata. Make sure you're sending a stringified JSON object.",
-    });
-
-  if (!request["base64Img"] || request["base64Img"] !== typeof "string")
-    return Responses._400({
-      message:
-        "Error with parsing base64Img. Make sure you are sending a base64 string, rather than a file.",
-    });
+  if (!request["metadata"]) throw "No metadata found.";
+  if (!request["base64Img"] || typeof request["base64Img"] !== "string")
+    throw "Error parsing base64Img. Make sure you are sending it and that it is a base64 string, not a file.";
 
   const imgFile = request["base64Img"];
-  let objFile;
 
-  try {
-    objFile = request["files"][0];
-    if (!objFile) throw "Object file not found.";
-    if (!objFile.filename.includes("obj"))
-      throw "Object file contentType must be of type .obj.";
-  } catch (e) {
-    console.log(e);
-    return Responses._400({ message: e.toString() });
-  }
+  const objFile = request["files"][0];
+  if (!objFile) throw "objectFile not found.";
+  if (!objFile.filename.includes("obj"))
+    throw "Object file contentType must be of type .obj.";
 
-  const walletId = event.pathParameters.walletId;
   let metadata;
 
   try {
     metadata = JSON.parse(request["metadata"]);
   } catch (e) {
-    return Responses._400({
-      message: `JSON error parsing metadata: ${e}`,
-    });
+    throw `JSON error parsing metadata, make sure you're sending a stringified JSON object: ${e}`;
   }
-
   return {
-    walletId: walletId,
     objFile: objFile,
     imgFile: imgFile,
     metadata: metadata,
