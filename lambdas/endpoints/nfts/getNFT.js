@@ -1,6 +1,6 @@
-import Responses from "../common/apiResponses";
-import Dynamo from "../common/dynamo";
-import getOrg from "../common/getOrg";
+import Responses from "../../common/apiResponses";
+import Dynamo from "../../common/dynamo";
+import getOrg from "../../common/getOrg";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;

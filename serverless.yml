@@ -69,77 +69,77 @@ custom:
 
 functions:
   createWallet:
-    handler: lambdas/endpoints/createWallet.handler
+    handler: lambdas/endpoints/wallets/createWallet.handler
     events:
       - http:
           path: create-wallet
           method: POST
           cors: true
   createNFT:
-    handler: lambdas/endpoints/createNFT.handler
+    handler: lambdas/endpoints/nfts/createNFT.handler
     events:
       - http:
           path: create-nft/{walletId}
           method: POST
           cors: true
   create3DNFT:
-    handler: lambdas/endpoints/create3DNFT.handler
+    handler: lambdas/endpoints/nfts/create3DNFT.handler
     events:
       - http:
           path: create-3d-nft/{walletId}
           method: POST
           cors: true
   getAllNFTs:
-    handler: lambdas/endpoints/getAllNFTs.handler
+    handler: lambdas/endpoints/nfts/getAllNFTs.handler
     events:
       - http:
           path: get-all-nfts
           method: GET
           cors: true
   getNFT:
-    handler: lambdas/endpoints/getNFT.handler
+    handler: lambdas/endpoints/nfts/getNFT.handler
     events:
       - http:
           path: get-nft/{id}
           method: GET
           cors: true
   getUserNFTs:
-    handler: lambdas/endpoints/getUserNFTs.handler
+    handler: lambdas/endpoints/nfts/getUserNFTs.handler
     events:
       - http:
           path: get-user-nfts/{walletId}
           method: GET
           cors: true
   createOrg:
-    handler: lambdas/endpoints/createOrg.handler
+    handler: lambdas/endpoints/orgs/createOrg.handler
     events:
       - http:
           path: create-org
           method: POST
           cors: true
   getWallet:
-    handler: lambdas/endpoints/getWallet.handler
+    handler: lambdas/endpoints/wallets/getWallet.handler
     events:
       - http:
           path: get-wallet/{walletId}
           method: GET
           cors: true
   getOrgById:
-    handler: lambdas/endpoints/getOrgById.handler
+    handler: lambdas/endpoints/orgs/getOrgById.handler
     events:
       - http:
           path: get-org-by-id/{orgId}
           method: GET
           cors: true
   updateOrg:
-    handler: lambdas/endpoints/updateOrg.handler
+    handler: lambdas/endpoints/orgs/updateOrg.handler
     events:
       - http:
           path: update-org/{orgId}
           method: POST
           cors: true
   getOrgWallet:
-    handler: lambdas/endpoints/getOrgWallet.handler
+    handler: lambdas/endpoints/wallets/getOrgWallet.handler
     events:
       - http:
           path: get-org-wallet/{orgId}

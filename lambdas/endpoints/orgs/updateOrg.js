@@ -1,5 +1,5 @@
-import Responses from "../common/apiResponses";
-import Dynamo from "../common/dynamo";
+import Responses from "../../common/apiResponses";
+import Dynamo from "../../common/dynamo";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;

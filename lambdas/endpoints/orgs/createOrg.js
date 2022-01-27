@@ -1,8 +1,8 @@
-import Responses from "../common/apiResponses";
-import Dynamo from "../common/dynamo";
+import Responses from "../../common/apiResponses";
+import Dynamo from "../../common/dynamo";
 import { v4 as uuidv4 } from "uuid";
-import getSecrets from "../common/getSecrets";
-import generateWallet from "../common/wallet/generateWallet";
+import getSecrets from "../../common/getSecrets";
+import generateWallet from "../../common/wallet/generateWallet";
 
 export async function handler(event) {
   const orgId = uuidv4();

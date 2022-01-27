@@ -1,14 +1,14 @@
-import getOrg from "../common/getOrg";
-import Responses from "../common/apiResponses";
-import Dynamo from "../common/dynamo";
+import getOrg from "../../common/getOrg";
+import Responses from "../../common/apiResponses";
+import Dynamo from "../../common/dynamo";
 import { v4 as uuidv4 } from "uuid";
-import getSecrets from "../common/getSecrets";
+import getSecrets from "../../common/getSecrets";
 import FormData from "form-data";
-import nftContract from "../../contracts/NFT.json";
+import nftContract from "../../../contracts/NFT.json";
 import parser from "lambda-multipart-parser";
 import { Readable } from "stream";
-import mintNFT from "../common/nft/mintNFT";
-import Pinata from "../common/nft/pinata";
+import mintNFT from "../../common/nft/mintNFT";
+import Pinata from "../../common/nft/pinata";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;

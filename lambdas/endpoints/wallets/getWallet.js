@@ -1,8 +1,8 @@
-import getOrg from "../common/getOrg";
+import getOrg from "../../common/getOrg";
 import { Buffer } from "buffer";
-import Responses from "../common/apiResponses";
-import Dynamo from "../common/dynamo";
-import getSecrets from "../common/getSecrets";
+import Responses from "../../common/apiResponses";
+import Dynamo from "../../common/dynamo";
+import getSecrets from "../../common/getSecrets";
 import crypto from "crypto";
 
 export async function handler(event) {
