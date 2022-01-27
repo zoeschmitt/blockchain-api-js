@@ -85,6 +85,7 @@ export async function handler(event) {
     // Set image hash and royalties information.
 
     metadata["image"] = `https://ipfs.io/ipfs/${pinataFileRes}`;
+    metadata["ipfsImgHash"] = `${pinataFileRes}`;
     metadata["seller_fee_basis_points"] = 1000; // 10%
     metadata["fee_recipient"] = orgWalletAddress;
 
