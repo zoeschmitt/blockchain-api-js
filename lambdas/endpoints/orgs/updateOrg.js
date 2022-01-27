@@ -29,25 +29,47 @@ export async function handler(event) {
     if (request["contract"] && typeof request["contract"] !== "string")
       throw "Contract must be of type string.";
 
+    let updateExpression;
+    let expressionAttributes;
+
+    if (request["contract"] && request["tier"]) {
+      updateExpression = "set orgData.tier=:t, orgData.contract=:c";
+      expressionAttributes = {
+        ":t": request["tier"],
+        ":c": request["contract"],
+      };
+    }
+    if (request["contract"]) {
+      updateExpression = "set orgData.contract=:c";
+      expressionAttributes = {
+        ":c": request["contract"],
+      };
+    }
+    if (request["tier"]) {
+      updateExpression = "set orgData.tier=:t";
+      expressionAttributes = {
+        ":t": request["tier"],
+      };
+    }
+
     const updateParams = {
       TableName: tableName,
       Key: {
         PK: `ORG#${orgId}`,
         SK: `METADATA#${orgId}`,
       },
-      UpdateExpression: "set orgData.tier = :t, orgData.contract=:c",
-      ExpressionAttributeValues: {
-        ":t": request["contract"],
-        ":c": request["tier"],
-      },
+      UpdateExpression: updateExpression,
+      ExpressionAttributeValues: expressionAttributes,
       ReturnValues: "UPDATED_NEW",
     };
+
+    console.log(updateParams)
 
     const udpatedOrg = await Dynamo.update(updateParams, tableName);
 
     return Responses._200(udpatedOrg);
   } catch (e) {
-    console.log(`getOrgById error: ${e.toString()}`);
-    return Responses._400({ message: `Error - getOrgById:  ${e.toString()}` });
+    console.log(`updateOrg error: ${e.toString()}`);
+    return Responses._400({ message: `Error - updateOrg:  ${e.toString()}` });
   }
 }

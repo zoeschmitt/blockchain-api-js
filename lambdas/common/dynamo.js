@@ -52,22 +52,15 @@ const Dynamo = {
     return data;
   },
 
-  async update(data, TableName) {
-    if (!data.PK) {
+  async update(data) {
+    if (!data.Key.PK) {
       throw Error("no PK on the data");
     }
 
-    const params = {
-      TableName,
-      Item: data,
-    };
-
-    const res = await documentClient.update(params).promise();
+    const res = await documentClient.update(data).promise();
 
     if (!res) {
-      throw Error(
-        `There was an error inserting id of ${data.PK} in table ${TableName}`
-      );
+      throw Error(`There was an error inserting id of ${data.Key.PK}`);
     }
 
     return res;
