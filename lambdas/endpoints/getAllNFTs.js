@@ -38,6 +38,7 @@ export async function handler(event) {
         nftId: nftData["nftId"],
         mintedBy: nftData["mintedBy"],
         walletAddress: nftData["walletAddress"],
+        transactionHash: nftData["transactionHash"],
         openseaUrl: nftData["openseaUrl"],
         metadata: nftData["metadata"],
         createdAt: nftData["createdAt"],

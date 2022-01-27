@@ -31,6 +31,7 @@ export async function handler(event) {
       console.log(e);
       return Responses._400({ message: e.toString() });
     }
+
     const { objFile, imgFile, metadata } = parseRequest;
 
     const org = await getOrg(event["headers"]);
@@ -54,10 +55,10 @@ export async function handler(event) {
         message: `Wallet not found with walletId ${walletId}`,
       });
     }
+
     const walletData = tempWallet;
     // Getting our wallet info
     const ourWallet = await getSecrets(process.env.OUR_WALLET);
-
     // Uploading image to pinata
     const pinataKeys = await getSecrets(process.env.PINATA_KEY);
     const imgBuffer = Buffer.from(imgFile, "base64");
@@ -145,6 +146,7 @@ export async function handler(event) {
       nftId: nftId,
       mintedBy: walletId,
       walletAddress: walletAddress,
+      transactionHash: txnReceipt["transactionHash"],
       openseaUrl: `${openseaBaseUrl}/${contractAddress}/${tokenId}`,
       metadata: metadata,
     };

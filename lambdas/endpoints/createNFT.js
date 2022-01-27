@@ -143,6 +143,7 @@ export async function handler(event) {
       nftId: nftId,
       mintedBy: walletId,
       walletAddress: walletAddress,
+      transactionHash: txnReceipt["transactionHash"],
       openseaUrl: `${openseaBaseUrl}/${contractAddress}/${tokenId}`,
       metadata: metadata,
     };
