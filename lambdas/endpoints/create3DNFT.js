@@ -124,6 +124,7 @@ export async function handler(event) {
 
     const nftData = {
       nftId: nftId,
+      orgId: orgId,
       contract: contractAddress,
       tokenId: tokenId,
       transactionHash: txnReceipt["transactionHash"],
