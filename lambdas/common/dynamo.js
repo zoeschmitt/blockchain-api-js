@@ -52,14 +52,33 @@ const Dynamo = {
     return data;
   },
 
+  async update(data, TableName) {
+    if (!data.PK) {
+      throw Error("no PK on the data");
+    }
+
+    const params = {
+      TableName,
+      Item: data,
+    };
+
+    const res = await documentClient.update(params).promise();
+
+    if (!res) {
+      throw Error(
+        `There was an error inserting id of ${data.PK} in table ${TableName}`
+      );
+    }
+
+    return res;
+  },
+
   async query(params) {
     const data = await documentClient.query(params).promise();
 
     if (!data || !data.Items) {
       throw Error(
-        `There was an error fetching the query data ${JSON.stringify(
-          params
-        )}`
+        `There was an error fetching the query data ${JSON.stringify(params)}`
       );
     }
     return data.Items;

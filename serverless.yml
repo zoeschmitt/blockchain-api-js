@@ -117,11 +117,31 @@ functions:
           path: create-org
           method: POST
           cors: true
-          # private: true
   getWallet:
     handler: lambdas/endpoints/getWallet.handler
     events:
       - http:
           path: get-wallet/{walletId}
+          method: GET
+          cors: true
+  getOrgById:
+    handler: lambdas/endpoints/getOrgById.handler
+    events:
+      - http:
+          path: get-org-by-id/{orgId}
+          method: GET
+          cors: true
+  updateOrg:
+    handler: lambdas/endpoints/updateOrg.handler
+    events:
+      - http:
+          path: update-org/{orgId}
+          method: POST
+          cors: true
+  getOrgWallet:
+    handler: lambdas/endpoints/getOrgWallet.handler
+    events:
+      - http:
+          path: get-org-wallet/{orgId}
           method: GET
           cors: true

@@ -2,17 +2,15 @@ import getOrg from "../common/getOrg";
 import { Buffer } from "buffer";
 import Responses from "../common/apiResponses";
 import Dynamo from "../common/dynamo";
-import { v4 as uuidv4 } from "uuid";
 import getSecrets from "../common/getSecrets";
 import crypto from "crypto";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
-  const walletId = uuidv4();
   try {
     console.log(event);
     if (!event.pathParameters || !event.pathParameters.walletId)
-      return Responses._400({ message: "Missing a walletId in the path" });
+      return Responses._404({ message: "Missing walletId in the path." });
 
     const walletId = event.pathParameters.walletId;
 
@@ -56,7 +54,7 @@ export async function handler(event) {
     console.log(`getWallet Finished successfully`);
     return Responses._200({ wallet: data });
   } catch (e) {
-    console.log(`ERROR - walletId: ${walletId} error: ${e.toString()}`);
+    console.log(e);
     return Responses._400({
       message: "Failed to get wallet, our development team has been notified",
     });
