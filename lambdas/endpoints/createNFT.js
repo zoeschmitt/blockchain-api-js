@@ -162,6 +162,7 @@ export async function handler(event) {
     await Dynamo.put(multNftQueryData, tableName);
     await Dynamo.put(singleNftQueryData, tableName);
 
+    console.log(`createNFT Finished successfully - nftId: ${nftId} - transaction hash: ${txnReceipt["transactionHash"]}`);
     return Responses._200({ nft: resNftData });
   } catch (e) {
     console.log(`ERROR - nftId: ${nftId} error: ${e.toString()}`);

@@ -25,6 +25,7 @@ export async function handler(event) {
 
     await Dynamo.put(data, tableName);
 
+    console.log(`createWallet Finished successfully`);
     return Responses._200({ walletId: walletId });
   } catch (e) {
     console.log(`ERROR - walletId: ${walletId} error: ${e.toString()}`);

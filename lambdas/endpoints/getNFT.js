@@ -38,6 +38,8 @@ export async function handler(event) {
     if (nftData.metadata.fee_recipient !== undefined)
       delete nftData.metadata.fee_recipient;
 
+    console.log(`getNFT Finished successfully`);
+
     return Responses._200({
       nft: {
         nftId: nftData["nftId"],

@@ -44,6 +44,7 @@ export async function handler(event) {
       });
     }
 
+    console.log(`getAllNFTs Finished successfully`);
     return Responses._200({ NFTs: nfts });
   } catch (e) {
     console.log(`getAllNFTs error - nftId: ${e.toString()}`);

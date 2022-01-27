@@ -22,19 +22,19 @@ export async function handler(event) {
     let walletData;
 
     try {
-        walletData = await Dynamo.get({
-          TableName: tableName,
-          Key: {
-            PK: `ORG#${orgId}#WAL#${walletId}`,
-            SK: `ORG#${orgId}`,
-          },
-        });
-        if (!walletData) throw "Wallet not found";
-      } catch (e) {
-        return Responses._404({
-          message: `Wallet not found with walletId ${walletId}`,
-        });
-      }
+      walletData = await Dynamo.get({
+        TableName: tableName,
+        Key: {
+          PK: `ORG#${orgId}#WAL#${walletId}`,
+          SK: `ORG#${orgId}`,
+        },
+      });
+      if (!walletData) throw "Wallet not found";
+    } catch (e) {
+      return Responses._404({
+        message: `Wallet not found with walletId ${walletId}`,
+      });
+    }
 
     const encodedCryptoPrivKey = await getSecrets(process.env.WALLETS_PRIV_KEY);
     const cryptoPrivKey = Buffer.from(
@@ -53,11 +53,12 @@ export async function handler(event) {
       address: walletData["wallet"]["address"],
     };
 
+    console.log(`getWallet Finished successfully`);
     return Responses._200({ wallet: data });
   } catch (e) {
-    console.log(
-      `ERROR - walletId: ${walletId} error: ${e.toString()}`
-    );
-    return Responses._400({ message: "Failed to get wallet, our development team has been notified" });
+    console.log(`ERROR - walletId: ${walletId} error: ${e.toString()}`);
+    return Responses._400({
+      message: "Failed to get wallet, our development team has been notified",
+    });
   }
 }

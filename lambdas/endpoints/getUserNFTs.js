@@ -47,6 +47,7 @@ export async function handler(event) {
       });
     }
 
+    console.log(`getUserNFTs Finished successfully`);
     return Responses._200({ NFTs: nfts });
   } catch (e) {
     console.log(`getUserNFTs error: ${e.toString()}`);
