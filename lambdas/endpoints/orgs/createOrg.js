@@ -14,6 +14,7 @@ export async function handler(event) {
       !request["name"] ||
       !request["apiKey"] ||
       !request["contract"] ||
+      !request["chain"] ||
       !request["tier"]
     )
       return Responses._400({
@@ -33,6 +34,7 @@ export async function handler(event) {
       orgId: orgId,
       name: request["name"],
       contract: request["contract"],
+      chain: request["chain"],
       tier: request["tier"],
       wallet: walletData,
     };

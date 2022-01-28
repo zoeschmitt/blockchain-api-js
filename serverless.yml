@@ -69,21 +69,21 @@ custom:
 
 functions:
   createWallet:
-    handler: lambdas/endpoints/wallets/createWallet.handler
+    handler: lambdas/endpoints/wallets/polygon/createWallet.handler
     events:
       - http:
           path: create-wallet
           method: POST
           cors: true
   createNFT:
-    handler: lambdas/endpoints/nfts/createNFT.handler
+    handler: lambdas/endpoints/nfts/polygon/createNFT.handler
     events:
       - http:
           path: create-nft/{walletId}
           method: POST
           cors: true
   create3DNFT:
-    handler: lambdas/endpoints/nfts/create3DNFT.handler
+    handler: lambdas/endpoints/nfts/polygon/create3DNFT.handler
     events:
       - http:
           path: create-3d-nft/{walletId}
@@ -118,7 +118,7 @@ functions:
           method: POST
           cors: true
   getWallet:
-    handler: lambdas/endpoints/wallets/getWallet.handler
+    handler: lambdas/endpoints/wallets/polygon/getWallet.handler
     events:
       - http:
           path: get-wallet/{walletId}
@@ -139,7 +139,7 @@ functions:
           method: POST
           cors: true
   getOrgWallet:
-    handler: lambdas/endpoints/wallets/getOrgWallet.handler
+    handler: lambdas/endpoints/wallets/polygon/getOrgWallet.handler
     events:
       - http:
           path: get-org-wallet/{orgId}
