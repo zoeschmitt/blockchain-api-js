@@ -100,7 +100,7 @@ export async function handler(event) {
     console.log(pinataFileRes);
     console.log(pinataJSONRes);
 
-    const tokenURI = `https://ipfs.io/ipfs/${pinataJSONRes}`;
+    const tokenURI = pinataJSONRes;
 
     // Minting NFT
     const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
@@ -131,7 +131,7 @@ export async function handler(event) {
       openseaUrl: `${openseaBaseUrl}/${contractAddress}/${tokenId}`,
       ipfsImgHash: pinataFileRes,
       ipfsJSONHash: pinataJSONRes,
-      ipfsLink: tokenURI,
+      ipfsLink: `https://ipfs.io/ipfs/${pinataJSONRes}`,
       metadata: metadata,
       createdAt: new Date().toISOString(),
     };

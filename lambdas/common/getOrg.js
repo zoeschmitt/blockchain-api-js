@@ -1,4 +1,3 @@
-const AWS = require("aws-sdk");
 const Dynamo = require("./dynamo");
 
 const getOrg = async (headers) => {
