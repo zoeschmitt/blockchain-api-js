@@ -1,6 +1,6 @@
-import Responses from "../common/apiResponses";
-import Dynamo from "../common/dynamo";
-import getOrg from "../common/getOrg";
+import Responses from "../../common/apiResponses";
+import Dynamo from "../../common/dynamo";
+import getOrg from "../../common/getOrg";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
@@ -38,11 +38,14 @@ export async function handler(event) {
     if (nftData.metadata.fee_recipient !== undefined)
       delete nftData.metadata.fee_recipient;
 
+    console.log(`getNFT Finished successfully`);
+
     return Responses._200({
       nft: {
         nftId: nftData["nftId"],
         mintedBy: nftData["mintedBy"],
         walletAddress: nftData["walletAddress"],
+        transactionHash: nftData["transactionHash"],
         openseaUrl: nftData["openseaUrl"],
         metadata: nftData["metadata"],
         createdAt: nftData["createdAt"],

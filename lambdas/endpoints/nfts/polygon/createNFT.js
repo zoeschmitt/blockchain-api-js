@@ -1,13 +1,13 @@
-import getOrg from "../common/getOrg";
-import Responses from "../common/apiResponses";
-import Dynamo from "../common/dynamo";
+import getOrg from "../../../common/getOrg";
+import Responses from "../../../common/apiResponses";
+import Dynamo from "../../../common/dynamo";
 import { v4 as uuidv4 } from "uuid";
-import getSecrets from "../common/getSecrets";
+import getSecrets from "../../../common/getSecrets";
 import FormData from "form-data";
-import nftContract from "../../contracts/NFT.json";
+import nftContract from "../../../../contracts/NFT.json";
 import { Readable } from "stream";
-import mintNFT from "../common/nft/mintNFT";
-import Pinata from "../common/nft/pinata";
+import mintNFT from "../../../common/nft/mintNFT";
+import Pinata from "../../../common/nft/pinata";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
@@ -47,6 +47,7 @@ export async function handler(event) {
 
     const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
+    const orgWalletAddress = org["wallet"]["address"];
     const ourWallet = await getSecrets(process.env.OUR_WALLET);
 
     let walletData;
@@ -84,8 +85,9 @@ export async function handler(event) {
     // Set image hash and royalties information.
 
     metadata["image"] = `https://ipfs.io/ipfs/${pinataFileRes}`;
+    metadata["ipfsImgHash"] = `${pinataFileRes}`;
     metadata["seller_fee_basis_points"] = 1000; // 10%
-    metadata["fee_recipient"] = ourWallet["address"];
+    metadata["fee_recipient"] = orgWalletAddress;
 
     const pinataJSONRes = await Pinata.pinJSONToIPFS(
       metadata,
@@ -98,7 +100,7 @@ export async function handler(event) {
     console.log(pinataFileRes);
     console.log(pinataJSONRes);
 
-    const tokenURI = `https://ipfs.io/ipfs/${pinataJSONRes}`;
+    const tokenURI = pinataJSONRes;
 
     // Minting NFT
     const alchemyKey = await getSecrets(process.env.ALCHEMY_KEY);
@@ -120,6 +122,7 @@ export async function handler(event) {
 
     const nftData = {
       nftId: nftId,
+      orgId: orgId,
       contract: contractAddress,
       tokenId: tokenId,
       transactionHash: txnReceipt["transactionHash"],
@@ -128,7 +131,7 @@ export async function handler(event) {
       openseaUrl: `${openseaBaseUrl}/${contractAddress}/${tokenId}`,
       ipfsImgHash: pinataFileRes,
       ipfsJSONHash: pinataJSONRes,
-      ipfsLink: tokenURI,
+      ipfsLink: `https://ipfs.io/ipfs/${pinataJSONRes}`,
       metadata: metadata,
       createdAt: new Date().toISOString(),
     };
@@ -142,6 +145,7 @@ export async function handler(event) {
       nftId: nftId,
       mintedBy: walletId,
       walletAddress: walletAddress,
+      transactionHash: txnReceipt["transactionHash"],
       openseaUrl: `${openseaBaseUrl}/${contractAddress}/${tokenId}`,
       metadata: metadata,
     };
@@ -161,6 +165,7 @@ export async function handler(event) {
     await Dynamo.put(multNftQueryData, tableName);
     await Dynamo.put(singleNftQueryData, tableName);
 
+    console.log(`createNFT Finished successfully - nftId: ${nftId} - transaction hash: ${txnReceipt["transactionHash"]}`);
     return Responses._200({ nft: resNftData });
   } catch (e) {
     console.log(`ERROR - nftId: ${nftId} error: ${e.toString()}`);

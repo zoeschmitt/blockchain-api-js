@@ -32,7 +32,7 @@ package:
 custom:
   stage: ${opt:stage, self:provider.stage}
   environment:
-    TABLE_NAME: 10xit-prod
+    TABLE_NAME: ${opt:stage, self:provider.stage},
     WALLETS_PUB_KEY:
       dev: dev/wallets/pubkey
       prod: prod/wallets/pubkey
@@ -69,72 +69,79 @@ custom:
 
 functions:
   createWallet:
-    handler: lambdas/endpoints/createWallet.handler
+    handler: lambdas/endpoints/wallets/polygon/createWallet.handler
     events:
       - http:
           path: create-wallet
           method: POST
           cors: true
   createNFT:
-    handler: lambdas/endpoints/createNFT.handler
+    handler: lambdas/endpoints/nfts/polygon/createNFT.handler
     events:
       - http:
           path: create-nft/{walletId}
           method: POST
           cors: true
   create3DNFT:
-    handler: lambdas/endpoints/create3DNFT.handler
+    handler: lambdas/endpoints/nfts/polygon/create3DNFT.handler
     events:
       - http:
           path: create-3d-nft/{walletId}
           method: POST
           cors: true
   getAllNFTs:
-    handler: lambdas/endpoints/getAllNFTs.handler
+    handler: lambdas/endpoints/nfts/getAllNFTs.handler
     events:
       - http:
           path: get-all-nfts
           method: GET
           cors: true
   getNFT:
-    handler: lambdas/endpoints/getNFT.handler
+    handler: lambdas/endpoints/nfts/getNFT.handler
     events:
       - http:
           path: get-nft/{id}
           method: GET
           cors: true
   getUserNFTs:
-    handler: lambdas/endpoints/getUserNFTs.handler
+    handler: lambdas/endpoints/nfts/getUserNFTs.handler
     events:
       - http:
           path: get-user-nfts/{walletId}
           method: GET
           cors: true
   createOrg:
-    handler: lambdas/endpoints/createOrg.handler
+    handler: lambdas/endpoints/orgs/createOrg.handler
     events:
       - http:
           path: create-org
           method: POST
           cors: true
-          # private: true
   getWallet:
-    handler: lambdas/endpoints/getWallet.handler
+    handler: lambdas/endpoints/wallets/polygon/getWallet.handler
     events:
       - http:
           path: get-wallet/{walletId}
           method: GET
           cors: true
-# resources:
-#   Resources:
-#     10xitprod:
-#       Type: AWS::DynamoDB::Table
-#       Properties:
-#         TableName: ${self:custom.TABLE_NAME}
-#         AttributeDefinitions:
-#           - AttributeName: PK
-#             AttributeType: S
-#         KeySchema:
-#           - AttributeName: SK
-#             KeyType: S
-#         BillingMode: PAY_PER_REQUEST
+  getOrgById:
+    handler: lambdas/endpoints/orgs/getOrgById.handler
+    events:
+      - http:
+          path: get-org-by-id/{orgId}
+          method: GET
+          cors: true
+  updateOrg:
+    handler: lambdas/endpoints/orgs/updateOrg.handler
+    events:
+      - http:
+          path: update-org/{orgId}
+          method: POST
+          cors: true
+  getOrgWallet:
+    handler: lambdas/endpoints/wallets/polygon/getOrgWallet.handler
+    events:
+      - http:
+          path: get-org-wallet/{orgId}
+          method: GET
+          cors: true

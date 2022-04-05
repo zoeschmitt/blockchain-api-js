@@ -1,14 +1,14 @@
-import getOrg from "../common/getOrg";
-import Responses from "../common/apiResponses";
-import Dynamo from "../common/dynamo";
+import getOrg from "../../../common/getOrg";
+import Responses from "../../../common/apiResponses";
+import Dynamo from "../../../common/dynamo";
 import { v4 as uuidv4 } from "uuid";
-import getSecrets from "../common/getSecrets";
+import getSecrets from "../../../common/getSecrets";
 import FormData from "form-data";
-import nftContract from "../../contracts/NFT.json";
+import nftContract from "../../../../contracts/NFT.json";
 import parser from "lambda-multipart-parser";
 import { Readable } from "stream";
-import mintNFT from "../common/nft/mintNFT";
-import Pinata from "../common/nft/pinata";
+import mintNFT from "../../../common/nft/mintNFT";
+import Pinata from "../../../common/nft/pinata";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
@@ -18,70 +18,47 @@ export async function handler(event) {
   try {
     // Verifying request data
     console.log(event);
-    const request = await parser.parse(event);
-
-    if (
-      !request ||
-      !request["metadata"] ||
-      !request["files"] ||
-      !request["base64Img"]
-    )
-      return Responses._400({
-        message:
-          "Missing nft metadata, objectFile, or base64Img from the request body",
-      });
 
     if (!event.pathParameters || !event.pathParameters.walletId)
       return Responses._404({ message: "walletId not found in path." });
 
-    const imgFile = request["base64Img"];
-    let objFile;
+    const walletId = event.pathParameters.walletId;
 
+    let parseRequest;
     try {
-      objFile = request["files"][0];
-      if (!objFile) throw "Object file not found.";
-      if (!objFile.filename.includes("obj"))
-        throw "Object file contentType must be of type .obj.";
+      parseRequest = await verifyAndParseRequest(event);
     } catch (e) {
       console.log(e);
       return Responses._400({ message: e.toString() });
     }
 
-    const walletId = event.pathParameters.walletId;
+    const { objFile, imgFile, metadata } = parseRequest;
+
     const org = await getOrg(event["headers"]);
     const orgId = org["orgId"];
-    let metadata;
+    const orgWalletAddress = org["wallet"]["address"];
+
+    let tempWallet;
 
     try {
-      // Verifying request data
-      metadata = JSON.parse(request["metadata"]);
-    } catch (e) {
-      return Responses._400({
-        message: `JSON error parsing metadata: ${e}`,
-      });
-    }
-
-    let walletData;
-
-    try {
-      walletData = await Dynamo.get({
+      tempWallet = await Dynamo.get({
         TableName: tableName,
         Key: {
           PK: `ORG#${orgId}#WAL#${walletId}`,
           SK: `ORG#${orgId}`,
         },
       });
-      if (!walletData) throw "Wallet not found";
+      if (!tempWallet) throw "Wallet not found";
     } catch (e) {
+      console.log(e);
       return Responses._404({
         message: `Wallet not found with walletId ${walletId}`,
       });
     }
 
+    const walletData = tempWallet;
     // Getting our wallet info
     const ourWallet = await getSecrets(process.env.OUR_WALLET);
-    const ourAddress = ourWallet["address"];
-
     // Uploading image to pinata
     const pinataKeys = await getSecrets(process.env.PINATA_KEY);
     const imgBuffer = Buffer.from(imgFile, "base64");
@@ -114,11 +91,8 @@ export async function handler(event) {
     // Set image hash and royalties information.
     metadata["image"] = `https://ipfs.io/ipfs/${pinataImgFileRes}`;
     metadata["object_ipfs_hash"] = pinataObjFileRes;
-    metadata[
-      "external_url"
-    ] = `https://10xit-inc.github.io/3d-viewer/?object=${pinataObjFileRes}&filename=${objFile["filename"]}`;
     metadata["seller_fee_basis_points"] = 1000; // 10%
-    metadata["fee_recipient"] = ourAddress;
+    metadata["fee_recipient"] = orgWalletAddress;
 
     const pinataJSONRes = await Pinata.pinJSONToIPFS(
       metadata,
@@ -149,6 +123,7 @@ export async function handler(event) {
 
     const nftData = {
       nftId: nftId,
+      orgId: orgId,
       contract: contractAddress,
       tokenId: tokenId,
       transactionHash: txnReceipt["transactionHash"],
@@ -171,6 +146,7 @@ export async function handler(event) {
       nftId: nftId,
       mintedBy: walletId,
       walletAddress: walletAddress,
+      transactionHash: txnReceipt["transactionHash"],
       openseaUrl: `${openseaBaseUrl}/${contractAddress}/${tokenId}`,
       metadata: metadata,
     };
@@ -190,6 +166,7 @@ export async function handler(event) {
     await Dynamo.put(multNftQueryData, tableName);
     await Dynamo.put(singleNftQueryData, tableName);
 
+    console.log(`create3DNFT Finished successfully - nftId: ${nftId} - transaction hash: ${txnReceipt["transactionHash"]}`);
     return Responses._200({ nft: resNftData });
   } catch (e) {
     console.log(`ERROR - nftId: ${nftId} error: ${e.toString()}`);
@@ -198,3 +175,36 @@ export async function handler(event) {
     });
   }
 }
+// returns objFile, imgFile, metadata
+const verifyAndParseRequest = async (event) => {
+  let request;
+  try {
+    request = await parser.parse(event);
+  } catch (e) {
+    throw e.toString();
+  }
+
+  if (!request["metadata"]) throw "No metadata found.";
+  if (!request["base64Img"] || typeof request["base64Img"] !== "string")
+    throw "Error parsing base64Img. Make sure you are sending it and that it is a base64 string, not a file.";
+
+  const imgFile = request["base64Img"];
+
+  const objFile = request["files"][0];
+  if (!objFile) throw "objectFile not found.";
+  if (!objFile.filename.includes("obj"))
+    throw "Object file contentType must be of type .obj.";
+
+  let metadata;
+
+  try {
+    metadata = JSON.parse(request["metadata"]);
+  } catch (e) {
+    throw `JSON error parsing metadata, make sure you're sending a stringified JSON object: ${e}`;
+  }
+  return {
+    objFile: objFile,
+    imgFile: imgFile,
+    metadata: metadata,
+  };
+};

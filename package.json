@@ -8,21 +8,13 @@
     "uuid": "^8.3.2",
     "web3": "^1.6.1"
   },
-  "name": "10xit-api",
+  "name": "polygon-api",
   "version": "1.0.0",
-  "description": "10xit api",
+  "description": "Polygon api",
   "scripts": {
     "test": "jest"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/10xit-inc/api.git"
-  },
   "author": "Zoe Schmitt",
-  "bugs": {
-    "url": "https://github.com/10xit-inc/api/issues"
-  },
-  "homepage": "https://github.com/10xit-inc/api#readme",
   "devDependencies": {
     "@babel/preset-env": "^7.16.5",
     "@shelf/jest-dynamodb": "^2.1.0",

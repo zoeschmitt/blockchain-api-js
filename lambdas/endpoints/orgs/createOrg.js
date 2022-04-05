@@ -1,8 +1,8 @@
-import Responses from "../common/apiResponses";
-import Dynamo from "../common/dynamo";
+import Responses from "../../common/apiResponses";
+import Dynamo from "../../common/dynamo";
 import { v4 as uuidv4 } from "uuid";
-import getSecrets from "../common/getSecrets";
-import generateWallet from "../common/wallet/generateWallet";
+import getSecrets from "../../common/getSecrets";
+import generateWallet from "../../common/wallet/generateWallet";
 
 export async function handler(event) {
   const orgId = uuidv4();
@@ -14,6 +14,7 @@ export async function handler(event) {
       !request["name"] ||
       !request["apiKey"] ||
       !request["contract"] ||
+      !request["chain"] ||
       !request["tier"]
     )
       return Responses._400({
@@ -33,6 +34,7 @@ export async function handler(event) {
       orgId: orgId,
       name: request["name"],
       contract: request["contract"],
+      chain: request["chain"],
       tier: request["tier"],
       wallet: walletData,
     };

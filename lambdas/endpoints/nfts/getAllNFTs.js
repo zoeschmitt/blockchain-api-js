@@ -1,6 +1,6 @@
-import Responses from "../common/apiResponses";
-import Dynamo from "../common/dynamo";
-import getOrg from "../common/getOrg";
+import Responses from "../../common/apiResponses";
+import Dynamo from "../../common/dynamo";
+import getOrg from "../../common/getOrg";
 
 export async function handler(event) {
   const tableName = process.env.TABLE_NAME;
@@ -38,12 +38,14 @@ export async function handler(event) {
         nftId: nftData["nftId"],
         mintedBy: nftData["mintedBy"],
         walletAddress: nftData["walletAddress"],
+        transactionHash: nftData["transactionHash"],
         openseaUrl: nftData["openseaUrl"],
         metadata: nftData["metadata"],
         createdAt: nftData["createdAt"],
       });
     }
 
+    console.log(`getAllNFTs Finished successfully`);
     return Responses._200({ NFTs: nfts });
   } catch (e) {
     console.log(`getAllNFTs error - nftId: ${e.toString()}`);
