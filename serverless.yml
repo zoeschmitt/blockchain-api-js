@@ -32,7 +32,7 @@ package:
 custom:
   stage: ${opt:stage, self:provider.stage}
   environment:
-    TABLE_NAME: 10xit-${opt:stage, self:provider.stage},
+    TABLE_NAME: ${opt:stage, self:provider.stage},
     WALLETS_PUB_KEY:
       dev: dev/wallets/pubkey
       prod: prod/wallets/pubkey

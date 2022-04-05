@@ -91,7 +91,6 @@ export async function handler(event) {
     // Set image hash and royalties information.
     metadata["image"] = `https://ipfs.io/ipfs/${pinataImgFileRes}`;
     metadata["object_ipfs_hash"] = pinataObjFileRes;
-    // metadata["external_url"] = `https://10xit-inc.github.io/3d-viewer/?object=${pinataObjFileRes}&filename=${objFile["filename"]}`;
     metadata["seller_fee_basis_points"] = 1000; // 10%
     metadata["fee_recipient"] = orgWalletAddress;
 

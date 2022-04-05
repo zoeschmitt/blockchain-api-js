@@ -1,6 +1,6 @@
 {
   "Table": {
-    "TableName": "10xit-prod",
+    "TableName": "polygon-prod",
     "KeySchema": [
       { "AttributeName": "PK", "KeyType": "HASH" },
       { "AttributeName": "SK", "KeyType": "HASH" }
